@@ -1,6 +1,7 @@
 class_name LintTree
 
 const ROOT_TEXT = " Conversations "
+
 var tree
 var root
 var base
@@ -36,6 +37,7 @@ func item_selected():
 		current_conversation = selected_name
 		panel.set_conversation(current_conversation)
 
+#Clicked on the tree
 func tree_clicked(pos, mouse_button_index):
 	if mouse_button_index == MOUSE_BUTTON_RIGHT:
 		base.create_popup(
@@ -56,13 +58,15 @@ func create_conversation():
 	convo.call_deferred("set_editable", 0, false)
 	print("Creating conversation...")
 
+#Returns true if the tree contains the given item string
 func tree_has_item(item) -> bool:
 	for child in root.get_children():
 		if child.get_text(0) == item:
 			return true
 	return false
 
-func generate_name(text):
+#Adds numbers to string to make it unique
+func generate_name(text) -> String:
 	while tree_has_item(text):
 		text += "1"
 	return text

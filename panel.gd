@@ -20,7 +20,6 @@ func _init(base, path, lint_values, conversation_data):
 	print("Panel initialised.")
 
 func clear_conversation_widgets():
-	#Wipe the current nodes
 	lines.clear()
 	
 	if graph_edit != null:
@@ -30,6 +29,7 @@ func clear_conversation_widgets():
 	
 	panel_path.add_child(graph_edit)
 
+#Sets the conversation with the given name
 func set_conversation(conversation_name):
 	clear_conversation_widgets()
 	
@@ -96,6 +96,7 @@ func create_line_node(pos, type, line=null):
 	LintWidget.recurse_create_widgets(graph_node, line["data"], type_data, "", lines)
 	print("Created new " + type + " line with ID: " + id)
 
+#Deletes a node
 func delete_node(node):
 	node.free()
 	print("Deleted line.")
