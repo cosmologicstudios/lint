@@ -90,8 +90,20 @@ class Type:
 		return option
 
 func declare_defaults():
-	var animations = ["idle", "talk"]
-	var speakers = ["bean1", "bean2"]
+	var animations = ["idle", "talk", "interact", "walk", "run", "sleep"]
+	var speakers = [
+		"Billy Vassiliou", "Beast", "Dad", "Mum", "Eddie Green", 
+		"Adrian Lu", "Donna Wright-Gorrie", "Sasha Pavic",
+		"Carter Mason", "Danny Burke", "Deborah Smith", "Dr Kimani", "Farah Saleh", "Lachlan King", "Riley King", "Lyndon Reed",
+		"Tatiana Cat", "Jinjer Cat", "Jan Bradbury", "Joseph Long", "Kit Demir", "Luke Keller", "Mo Subramani", "Patrick Murray",
+		"Jimmy Gallagher", "Karen Nash-Perry",
+		"Benjie Tambo", "Chloe Lyon", "Gabriela Torres", "Hugo Torres", "Javonte Ford", "Liam Thompson", "Mickey",
+		"Donald Duffy", "Sam Mackenzie",
+		"Gary Lowe", "Ian Davies", "Irene Weber", "Kristie Wallace",
+		"Anne Bishop", "Kev Munro", "Nina Kraviz", "Takuya Ito", "Tom Rogers",
+	]
+	speakers.sort()
+	speakers.insert(0, "None")
 	
 	declare_line_type("default", 
 		LintObject.Type.Struct({
