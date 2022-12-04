@@ -33,13 +33,19 @@ _global_script_classes=[{
 "class": &"LintWidget",
 "language": &"GDScript",
 "path": "res://widgets.gd"
+}, {
+"base": "RefCounted",
+"class": &"Serialisation",
+"language": &"GDScript",
+"path": "res://serialisation.gd"
 }]
 _global_script_class_icons={
 "Base": "",
 "LintObject": "",
 "LintPanel": "",
 "LintTree": "",
-"LintWidget": ""
+"LintWidget": "",
+"Serialisation": ""
 }
 
 [application]

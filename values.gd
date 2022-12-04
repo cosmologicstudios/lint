@@ -7,7 +7,7 @@ enum TypeId {
 	Option,
 	List,
 	Struct,
-	Condition
+	Total
 }
 
 var line_types = {}
@@ -30,13 +30,13 @@ class Type:
 	static func Line():
 		return { "type": TypeId.Line }
 	
-	static func Choice(choices):
+	static func Choice(choices: Array):
 		return {
 			"type": TypeId.Choice,
 			"choices": choices
 		}
 	
-	static func Option(options):
+	static func Option(options: Dictionary):
 		return {
 			"type": TypeId.Option,
 			"options": options
@@ -48,14 +48,46 @@ class Type:
 			"contains": contains
 		}
 	
-	static func Struct(fields):
+	static func Struct(fields: Dictionary):
 		return {
 			"type": TypeId.Struct,
 			"fields": fields
 		}
 	
+	#Condition is actually just a pre-made Option
 	static func Condition():
-		return { "type": TypeId.Condition }
+		var conditions = {
+			"none": null,
+			"equals": (func(): 
+				return LintObject.Type.Struct({
+					"value1": LintObject.Type.Value(),
+					"value2": LintObject.Type.Value()
+				})), 
+			"greater_than": (func(): 
+				return LintObject.Type.Struct({
+					"value1": LintObject.Type.Value(),
+					"value2": LintObject.Type.Value()
+				})), 
+			"less_than": (func(): 
+				return LintObject.Type.Struct({
+					"value1": LintObject.Type.Value(),
+					"value2": LintObject.Type.Value()
+				})), 
+			"not": (func(): 
+				return LintObject.Type.Struct({
+				"condition": LintObject.Type.Condition()
+				})),
+			"or": (func(): 
+				return LintObject.Type.Struct({
+				"conditions": LintObject.Type.List(LintObject.Type.Condition())
+				})),
+			"and": (func(): 
+				return LintObject.Type.Struct({
+				"conditions": LintObject.Type.List(LintObject.Type.Condition())
+				})), 
+		}
+		var option = LintObject.Type.Option(conditions)
+		return option
 
 func declare_defaults():
 	var animations = ["idle", "talk"]

@@ -3,10 +3,12 @@ class_name LintTree
 var tree
 var root
 var base
+var conversations
 
-func _init(base_node, node):
+func _init(base_node, node, conversation_data):
 	base = base_node
 	tree = node
+	conversations = conversation_data
 
 	root = tree.create_item()
 	root.set_text(0, "Conversations")
@@ -63,5 +65,6 @@ func rename_selected_conversation():
 func delete_selected_conversation():
 	var selected = tree.get_selected()
 	if selected != null and selected != root:
+		var text = selected.get_text(0)
 		selected.free()
-		print("Deleted conversation: " + selected.get_text(0))
+		print("Deleted conversation: " + text)

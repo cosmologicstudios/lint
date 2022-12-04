@@ -4,6 +4,7 @@ var base
 var values
 var tree
 var panel
+var conversations
 
 func _ready():
 	var container = $ColorRect/MarginContainer/HSplitContainer
@@ -12,9 +13,13 @@ func _ready():
 	var root_node = get_tree().root
 	
 	print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\nLint is powering up...")
+	conversations = Serialisation.load_data()
+	
 	base = Base.new(root_node)
 	values = LintObject.new()
-	tree = LintTree.new(base, tree_path)
-	panel = LintPanel.new(base, panel_path, values)
+	tree = LintTree.new(base, tree_path, conversations)
+	panel = LintPanel.new(base, panel_path, values, conversations)
 	print("Power up complete. Hello, Lint!\n")
 	print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+	
+	randomize()
