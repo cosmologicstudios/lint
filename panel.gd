@@ -19,15 +19,7 @@ func _init(base, path, lint_values, conversation_data):
 	conversations = conversation_data
 	print("Panel initialised.")
 
-func set_conversation(conversation_name):
-	if conversation_name not in conversations:
-		conversations[conversation_name] = {
-			"name": conversation_name,
-			"lines": {}
-		}
-	conversation = conversations[conversation_name]
-	print("Selected conversation: " + conversation_name)
-	
+func clear_conversation_widgets():
 	#Wipe the current nodes
 	lines.clear()
 	
@@ -37,6 +29,17 @@ func set_conversation(conversation_name):
 	graph_edit.connect("popup_request", panel_right_clicked)
 	
 	panel_path.add_child(graph_edit)
+
+func set_conversation(conversation_name):
+	clear_conversation_widgets()
+	
+	if conversation_name not in conversations:
+		conversations[conversation_name] = {
+			"name": conversation_name,
+			"lines": {}
+		}
+	conversation = conversations[conversation_name]
+	print("Selected conversation: " + conversation_name)
 	
 	#Create conversation widgets
 	var line_names = conversation["lines"].keys()
@@ -49,9 +52,6 @@ func set_conversation(conversation_name):
 		var y_pos = sep + (floor(i / 2) * (NODE_HEIGHT + sep))
 		
 		create_line_node(Vector2(x_pos, y_pos), line["type"], line)
-
-func save_conversation(_conversation_name):
-	pass
 
 #Right click in panel to create context menu to create new node
 func panel_right_clicked(pos):

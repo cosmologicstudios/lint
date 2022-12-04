@@ -100,4 +100,7 @@ func delete_selected_conversation():
 	if selected != null and selected != root:
 		var text = selected.get_text(0)
 		selected.free()
+		conversations.erase(text)
 		print("Deleted conversation: " + text)
+		
+		panel.clear_conversation_widgets()
