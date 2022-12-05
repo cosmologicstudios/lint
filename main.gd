@@ -26,15 +26,26 @@ func _ready():
 	menu_bar.add_item("Save As")
 	menu_bar.connect("index_pressed", menu_select)
 	
+	base = Base.new(root_node)
+	values = LintObject.new()
 	setup_lint()
 
 func setup_lint():
 	var container = $ColorRect/MarginContainer/HSplitContainer
-	var tree_path = container.get_node("Side/Tree")
+	var tree_path = container.get_node("Side")
 	var panel_path = container.get_node("Main")
 	
-	base = Base.new(root_node)
-	values = LintObject.new()
+	#If we have already initialised, we need to delete old data
+	var panel_children = panel_path.get_children()
+	for child in panel_children:
+		panel_path.remove_child(child)
+		print("Removed panel.")
+	var tree_children = tree_path.get_children()
+	for child in tree_children:
+		tree_path.remove_child(child)
+		print("Removed tree.")
+	
+	#If we are refreshing, the old references will be dropped
 	panel = LintPanel.new(base, panel_path, values, conversations)
 	tree = LintTree.new(base, tree_path, conversations, panel)
 
@@ -46,6 +57,7 @@ func menu_select(index):
 					if path_is_valid(path):
 						save_path = path
 						conversations = Serialisation.load_from_json(path)
+						setup_lint()
 			)
 		MenuIndex.Save:
 			if save_path == null:

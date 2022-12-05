@@ -121,11 +121,11 @@ func declare_defaults():
 	)
 	declare_line_type("choice", 
 		LintObject.Type.Struct({
-			"text": LintObject.Type.Value(),
 			"choices": LintObject.Type.List(LintObject.Type.Struct({
-				"signals": LintObject.Type.List(LintObject.Type.Value()),
+				"text": LintObject.Type.Value(),
 				"go_to_line": LintObject.Type.Line(),
-				"show_condition": LintObject.Type.Condition()
+				"show_condition": LintObject.Type.Condition(),
+				"signals": LintObject.Type.List(LintObject.Type.Value()),
 			}))
 		})
 	)
