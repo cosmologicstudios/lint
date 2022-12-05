@@ -44,6 +44,7 @@ func clear_conversation_widgets():
 
 #Sets the conversation with the given name
 func set_conversation(conversation_name):
+	print(conversation)
 	identifier = 0
 	
 	clear_conversation_widgets()
@@ -124,7 +125,7 @@ func create_line_node(pos, type, line=null, id=null):
 	graph_node.title = str_identifier + " | " + type + " | id: " + id
 	
 	var type_data = values.get_line_types()[type]
-	LintWidget.recurse_create_widgets(graph_node, line["data"], type_data, "", lines, conversation)
+	LintWidget.recurse_create_widgets(graph_node, line["data"], type_data, "", lines)
 	print("Created new " + type + " line with ID: " + id)
 	
 #Deletes a node
