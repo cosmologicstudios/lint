@@ -25,7 +25,6 @@ func _init(base_node, tree_path, conversation_data, main_panel):
 	
 	tree.connect("gui_input", _gui_input)
 	#note: confusingly, "item_activated" is actually when the label is double clicked
-	tree.connect("item_activated", rename_selected_conversation)
 	tree.connect("item_edited", validate_item_edited)
 	tree.connect("cell_selected", item_selected)
 	

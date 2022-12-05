@@ -1,5 +1,6 @@
 extends Control
 
+var export_path = null
 var save_path = null
 var root_node
 var conversations = {}
@@ -12,7 +13,8 @@ var tree
 enum MenuIndex {
 	Open,
 	Save,
-	SaveAs
+	SaveAs,
+	Export
 }
 
 func _ready():
@@ -24,6 +26,7 @@ func _ready():
 	menu_bar.add_item("Open")
 	menu_bar.add_item("Save")
 	menu_bar.add_item("Save As")
+	menu_bar.add_item("Export")
 	menu_bar.connect("index_pressed", menu_select)
 	
 	base = Base.new(root_node)
@@ -71,6 +74,20 @@ func menu_select(index):
 						save_path = path
 						Serialisation.save_to_json(conversations, path)
 			)
+		
+		MenuIndex.Export:
+			if export_path == null:
+				create_file_dialogue(FileDialog.FILE_MODE_SAVE_FILE, 
+					func(path):
+						if path_is_valid(path):
+							export_path = path
+							menu_select(MenuIndex.Export)
+				)
+			else:
+				Serialisation.save_to_json(serialise(), export_path)
+
+func serialise():
+	return conversations
 
 func path_is_valid(path):
 	return path != null and path != ""
