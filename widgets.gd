@@ -46,28 +46,28 @@ static func create_list_entry(node, list, entry_data, type_data, item, lines, co
 	
 	box.add_child(delete)
 
-static func setup_line_items(choices, lines):
+static func setup_line_items(choices, lines, line_data):
 	var keys = lines.keys()
-	var selected_id = choices.get_selected_id()
-	
 	choices.clear()
-	choices.add_item("None")
-	choices.set_item_metadata(0, null)
 	
-	#Skipped first entry as it is None
-	var i = 1
-	while true:
-		#However, we aren't skipping any keys
-		var id = keys[i-1]
+	#First entry is clear
+	choices.add_item("")
+	
+	for i in len(keys):
+		var id = keys[i]
 		choices.add_item("Line " + lines[id])
-		choices.set_item_metadata(i, id)
-		
-		i += 1
-		if i > len(keys):
-			break
+		#Skipped first entry as it is clear
+		choices.set_item_metadata(i+1, id)
 	
 	#Select our old index
-	choices.select(selected_id)
+	var selected_idx = -1
+	if line_data[VALUE] != null:
+		for idx in choices.item_count:
+			var metadata = choices.get_item_metadata(idx)
+			if metadata == line_data[VALUE]:
+				selected_idx = idx
+				break
+	choices.select(selected_idx)
 
 static func recurse_create_widgets(node, line_data, type_data, data_name, lines, conversation):
 	match type_data["type"]:
@@ -98,20 +98,31 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			label.text = data_name
 			var choices = OptionButton.new()
 			choices.set_h_size_flags(Control.SIZE_EXPAND_FILL)
-			choices.add_item("None")
 			
 			choices.connect("item_selected", (
-				func(index, line_data, option_button): 
-					line_data[VALUE] = option_button.get_item_metadata(index)
+				func(index, line_data, choices): 
+					print(index)
+					var data = null
+					if index > 0:
+						data = choices.get_item_metadata(index)
+					line_data[VALUE] = data
 			).bind(line_data, choices))
 			
 			choices.connect("pressed", (
-				func(choices, lines): setup_line_items(choices, lines)
-			).bind(choices, lines))
+				func(choices, lines, line_data): setup_line_items(choices, lines, line_data)
+			).bind(choices, lines, line_data))
 			
 			node.add_child(label)
 			node.add_child(choices)
-		
+			
+			if line_data[VALUE] != null:
+				for i in choices.item_count:
+					if line_data[VALUE] == choices.get_item_metadata(i):
+						choices.call_deferred("select", i)
+						choices.call_deferred("emit_signal", "pressed")
+						choices.call_deferred("emit_signal", "item_selected", i)
+						break
+			
 		LintObject.TypeId.Choice:
 			var box = create_h_marginbox(node)
 			var label = Label.new()
@@ -119,14 +130,20 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			var choices = OptionButton.new()
 			choices.set_h_size_flags(Control.SIZE_EXPAND_FILL)
 			
+			choices.add_item("")
 			for i in len(type_data["choices"]):
 				var choice = type_data["choices"][i]
 				choices.add_item(choice)
-				choices.set_item_metadata(i, choice)
+				#We skip the first one as it is clear
+				choices.set_item_metadata(i+1, choice)
 			
 			choices.connect("item_selected", (
 				func(index, line_data, option_button): 
-					line_data[VALUE] = option_button.get_item_metadata(index)
+					print(index)
+					var data = null
+					if index > 0:
+						data = option_button.get_item_metadata(index)
+					line_data[VALUE] = data
 			).bind(line_data, choices))
 			
 			box.add_child(label)
@@ -135,7 +152,8 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			if line_data[VALUE] != null:
 				for i in len(type_data["choices"]):
 					if type_data["choices"][i] == line_data[VALUE]:
-						choices.select(i)
+						choices.call_deferred("select", i)
+						choices.call_deferred("emit_signal", "item_selected", i)
 						break
 		
 		LintObject.TypeId.Struct:
@@ -167,19 +185,23 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			box.add_child(container)
 			
 			var select_option = func(index, options, field_box, line_data):
-				var option_name = options.get_item_text(index)
-				var metadata = options.get_item_metadata(index)
 				var children = field_box.get_children()
 				for child in children:
 					field_box.remove_child(child)
 				
-				if metadata != null:
-					metadata = metadata.call()
-					if line_data[VALUE] == null or line_data[VALUE].keys()[0] != option_name:
-						line_data[VALUE] = {
-							option_name: { VALUE: null }
-						}
-					recurse_create_widgets(field_box, line_data[VALUE][option_name], metadata, "", lines, conversation)
+				if index <= 0:
+					print(index)
+					line_data[VALUE] = null
+				else:
+					var metadata = options.get_item_metadata(index)
+					if metadata != null:
+						metadata = metadata.call()
+						var option_name = options.get_item_text(index)
+						if line_data[VALUE] == null or line_data[VALUE].keys()[0] != option_name:
+							line_data[VALUE] = {
+								option_name: { VALUE: null }
+							}
+						recurse_create_widgets(field_box, line_data[VALUE][option_name], metadata, "", lines, conversation)
 			
 			var option_strings = type_data["options"].keys()
 			
@@ -188,6 +210,7 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			var options = OptionButton.new()
 			options.set_h_size_flags(Control.SIZE_EXPAND_FILL)
 			
+			options.add_item("")
 			for i in len(option_strings):
 				var choice = option_strings[i]
 				options.add_item(choice)
@@ -199,10 +222,13 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			field_box.name = "fields"
 			options.connect("item_selected", select_option.bind(options, field_box, line_data))
 			
-			for i in options.item_count:
-				var option_name = option_strings[i]
+			var i = 1
+			while i < options.item_count:
+				var option_name = option_strings[i-1]
 				var option_func = type_data["options"][option_name]
+				#We skip the first entry as it is clear
 				options.set_item_metadata(i, option_func)
+				i += 1
 			
 			#Have we already got a selection?
 			if line_data[VALUE] != null:
@@ -210,8 +236,8 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 				var option_name = keys[0]
 				var options_keys = type_data["options"].keys()
 				var index = options_keys.find(option_name)
-				options.select(index)
-				select_option.call(index, options, field_box, line_data)
+				options.call_deferred("select", index)
+				options.call_deferred("emit_signal", "item_selected", index)
 		
 		LintObject.TypeId.List:
 			if line_data[VALUE] == null:

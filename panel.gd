@@ -55,9 +55,14 @@ func set_conversation(conversation_name):
 	conversation = conversations[conversation_name]
 	print("Selected conversation: " + conversation_name)
 	
-	#Create conversation widgets
 	var line_names = conversation["lines"].keys()
-	for i in len(line_names):
+	var total = len(line_names)
+	var str_identifiers = []
+	for i in total:
+		str_identifiers.append(register_line(line_names[i]))
+	
+	#Create conversation widgets
+	for i in total:
 		var id = line_names[i]
 		var line = conversation["lines"][id]
 		
@@ -68,7 +73,7 @@ func set_conversation(conversation_name):
 		if i % 2 == 1:
 			y_pos = y_pos + sep
 		
-		create_line_node(Vector2(x_pos, y_pos), line["type"], line, id)
+		create_line_node(Vector2(x_pos, y_pos), line["type"], line, id, str_identifiers[i])
 
 #Right click in panel to create context menu to create new node
 func panel_right_clicked(pos):
@@ -81,50 +86,61 @@ func panel_right_clicked(pos):
 	var line_types = values.get_line_types()
 	for type in line_types.keys():
 		prompts.append("Create " + type.capitalize())
-		funcs.append(create_line_node.bind(pos, type))
+		funcs.append(add_line_node.bind(pos, type))
 	
 	prompts.append("")
 	prompts.append("Cancel")
 	base_singleton.create_popup(prompts, funcs)
 
+func create_line_node(pos, type, line, id, str_identifier):
+	var graph_node = GraphNode.new()
+	graph_edit.add_child(graph_node)
+	
+	graph_node.set_draggable(true)
+	graph_node.set_resizable(true)
+	graph_node.set_show_close_button(true)
+	
+	graph_node.connect("resize_request", (
+		func(min_size, graph_node): graph_node.set_size(min_size)
+	).bind(graph_node))
+	graph_node.connect("close_request", base_singleton.create_popup.bind(
+		["Delete", "Cancel"],
+		[delete_node.bind(graph_node, id)],
+	))
+	graph_node.connect("mouse_entered", (
+		func(graph_edit, graph_node): graph_edit.set_selected(graph_node)
+	).bind(graph_edit, graph_node))
+	
+	graph_node.set_position_offset(pos)
+	graph_node.set_size(Vector2(NODE_WIDTH, NODE_HEIGHT))
+	
+	graph_node.set_title(str_identifier + " | " + type + " | id: " + id)
+	
+	var type_data = values.get_line_types()[type]
+	LintWidget.recurse_create_widgets(graph_node, line["data"], type_data, "", lines, conversation)
+	print("Created new " + type + " line with ID: " + id)
+
 #Create a node in the panel
-func create_line_node(pos, type, line=null, id=null):
-	if id == null:
-		id = str(randi())
+func add_line_node(pos, type):
+	var id = str(randi())
 	
 	var keys = lines.keys()
 	while id in keys:
 		id = str(randi())
 	
+	var line = {
+		"type": type, 
+		"data": { LintWidget.VALUE : null } 
+	}
+	conversation["lines"][id] = line
+	
+	var str_identifier = register_line(id)
+	create_line_node(pos, type, line, id, str_identifier)
+
+func register_line(id):
 	var str_identifier = get_identifier()
 	lines[id] = str_identifier
-	
-	if(line == null):
-		line = {
-			"type": type, 
-			"data": { LintWidget.VALUE : null } 
-		}
-		conversation["lines"][id] = line
-	
-	var graph_node = GraphNode.new()
-	graph_edit.add_child(graph_node)
-	
-	graph_node.set_draggable(true)
-	graph_node.resizable = true
-	graph_node.show_close = true
-	
-	graph_node.connect("close_request", base_singleton.create_popup.bind(
-		["Delete", "Cancel"],
-		[delete_node.bind(graph_node, id)],
-	))
-	graph_node.position_offset = pos
-	graph_node.set_size(Vector2(NODE_WIDTH, NODE_HEIGHT))
-	
-	graph_node.title = str_identifier + " | " + type + " | id: " + id
-	
-	var type_data = values.get_line_types()[type]
-	LintWidget.recurse_create_widgets(graph_node, line["data"], type_data, "", lines, conversation)
-	print("Created new " + type + " line with ID: " + id)
+	return str_identifier
 	
 #Deletes a node
 func delete_node(node, id):

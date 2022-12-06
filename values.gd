@@ -7,6 +7,7 @@ enum TypeId {
 	Option,
 	List,
 	Struct,
+	Signals,
 	Total
 }
 
@@ -57,7 +58,6 @@ class Type:
 	#Condition is actually just a pre-made Option
 	static func Condition():
 		var conditions = {
-			"none": null,
 			"equals": (func(): 
 				return LintObject.Type.Struct({
 					"value1": LintObject.Type.Value(),
@@ -88,6 +88,46 @@ class Type:
 		}
 		var option = LintObject.Type.Option(conditions)
 		return option
+	
+	static func Signals(items, quests, skills):
+		var signals = {
+			"add_health": (func(): 
+				return LintObject.Type.Value()
+				),
+			"advance_quest": (func(quests): 
+				return LintObject.Type.Struct({
+					"quest": LintObject.Type.Choice(quests),
+					"stage": LintObject.Type.Value()
+				})).bind(quests),
+			"set_object_variable": (func(): 
+				return LintObject.Type.Struct({
+					"object": LintObject.Type.Value(),
+					"variable": LintObject.Type.Value()
+				})),
+			"add_object_variable": (func(): 
+				return LintObject.Type.Struct({
+					"object": LintObject.Type.Value(),
+					"variable": LintObject.Type.Value()
+				})),
+			"create_object": (func(): 
+				return LintObject.Type.Value()
+				),
+			"delete_object": (func(): 
+				return LintObject.Type.Value()
+				),
+			"add_item": (func(items): 
+				return LintObject.Type.Struct({
+					"item": LintObject.Type.Choice(items),
+					"number": LintObject.Type.Value()
+				})).bind(items), 
+			"add_skill_level": (func(skills): 
+				return LintObject.Type.Struct({
+					"skills": LintObject.Type.Choice(skills),
+					"level": LintObject.Type.Value()
+				})).bind(skills),
+		}
+		return LintObject.Type.List(LintObject.Type.Option(signals))
+		
 
 func declare_defaults():
 	var animations = ["idle", "talk", "interact", "walk", "run", "sleep"]
@@ -103,14 +143,41 @@ func declare_defaults():
 		"Anne Bishop", "Kev Munro", "Nina Kraviz", "Takuya Ito", "Tom Rogers",
 	]
 	speakers.sort()
-	speakers.insert(0, "None")
+	speakers.insert(0, "Narration")
+	
+	var items = [
+		"watch",
+		"ute keys",
+		"backpack",
+		"handheld radio",
+		"torch",
+		"gloves",
+		"multi tool",
+		"harmonica",
+		"binoculars",
+		"lockpick",
+		"rope",
+		"gun"
+	]
+	items.sort()
+	
+	var quests = [
+		"find bean", 
+	]
+	quests.sort()
+	
+	var skills = [
+		"impulse", "backbone", "finesse", "cool", "cursed",
+		"chronicler", "savvy", "tech", "earthling", "blood",
+		"strange", "sharp", "dramaturgy", "domination", "empath"
+	]
 	
 	declare_line_type("default", 
 		LintObject.Type.Struct({
 			"text": LintObject.Type.Value(),
 			"speaker": LintObject.Type.Choice(speakers),
 			"animation": LintObject.Type.Choice(animations),
-			"signals": LintObject.Type.List(LintObject.Type.Value()),
+			"signals": LintObject.Type.Signals(items, quests, skills),
 			"go_to_line": LintObject.Type.List(
 				LintObject.Type.Struct({
 					"line_id": LintObject.Type.Line(),
@@ -125,7 +192,7 @@ func declare_defaults():
 				"text": LintObject.Type.Value(),
 				"go_to_line": LintObject.Type.Line(),
 				"show_condition": LintObject.Type.Condition(),
-				"signals": LintObject.Type.List(LintObject.Type.Value()),
+				"signals": LintObject.Type.Signals(items, quests, skills),
 			}))
 		})
 	)

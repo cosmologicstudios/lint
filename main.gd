@@ -95,9 +95,9 @@ func menu_select(index):
 							menu_select(MenuIndex.Export)
 				)
 			else:
-				var serialised_data = serialise(conversations)
+				var serialised_data = serialise(conversations.duplicate(true))
 				Serialisation.save_to_json(serialised_data, export_path)
-				
+				print("Exported to " + export_path + ".")
 
 #Serialising involves flattening conversations to remove LintWidget.VALUE nesting
 func serialise(data):
@@ -116,6 +116,8 @@ func serialise(data):
 					break
 				else:
 					data[value] = serialise(data[value])
+			return data
+		TYPE_NIL:
 			return data
 		_:
 			print("Attempted to serialise data of unknown type: " + str(typeof(data)) + ":")
