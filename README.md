@@ -8,35 +8,24 @@
 
 🌀 Or create your own line types with any fields you want.
 
-🚀 Export your data to JSON or YAML.
+🚀 Export your data to JSON.
 
 ## How it Works
 
-A project is made up of **Conversations**, which are made up of Lines. Each line has a Type, which determines its Fields.
+A project is made up of **Conversations**, which are themselves made up of Lines. Each line has a Type, which determines its Fields.
 
 **Default** lines are spoken by an NPC. 
 
-```yaml
-id: Value                 // A randomly generated UUID. We can use this unique identifier for localisation, audio, etc.
-type: LineType            // The Type of the line. This will either be "default" or "choice".
-text: Value               // The actual line of dialogue.
-speaker: Value            // The character who speaks the line.
-animation: Value          // Set the animation of the speaker.
-goto: List(               // The line we will "go to" next. 
-  condition: Value,       // We can set multiple entries of lines to "go to" with conditions;
-  line: Line              // For example, we may want to go to line3 if gold > 10 but otherwise go to line 4.
-)                         
-signals: List(Signal)     // A list of "signals" or game triggers, eg: "change_variable gold add 100".
-```
-**Choice** lines appear as a number of choices the Player can select.
-```yaml
-id: Value                 // A randomly generated UUID. We can use this unique identifier for localisation, audio, etc.
-type: LineType            // The Type of the line. This will either be "default" or "choice".
-animation: Value          // Set the animation of the speaker.
-choices: List(            // A list of choice lines the Player can select.
-  text: Value             // The actual line of dialogue.
-  goto: Line              // The line we will "go to" next. 
-  signals: List(Signal)   // Signals to run if this choice is selected.
-  show_condition: Value   // The condition for this choice to appear, eg. "health > 2"
-)                         
-```
+**Choice** lines have no speaker, as these will be player choices.
+
+Right click on the conversation tree (left) or main panel (right) to create a new conversation or line, respectively.
+
+## Saving and Exporting
+
+To save your lint project, navigate to File -> Save (or Save As) and choose a file location. Note that the file type ".lnt" is actually just a json file configured for a lint project. Any .lnt file can be Opened (File -> Open) to work on. 
+
+Once you have saved or opened a file, your file location will be cached for the duration lint is open.
+
+To Export your data, navigate to File -> Export. This will produce a json file that strips away the data lint uses to process. Note that these *cannot* be loaded back into lint, so ensure you save as a ".lnt" file to backup your project.
+
+Once you have exported a file, your file location will be cached for the duration lint is open.
