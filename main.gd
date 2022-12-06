@@ -10,6 +10,11 @@ var values
 var panel
 var tree
 
+enum FilterType {
+	Lint,
+	Json
+}
+
 enum MenuIndex {
 	Open,
 	Save,
@@ -55,7 +60,9 @@ func setup_lint():
 func menu_select(index):
 	match index:
 		MenuIndex.Open:
-			create_file_dialogue(FileDialog.FILE_MODE_OPEN_FILE, 
+			create_file_dialogue(
+				FileDialog.FILE_MODE_OPEN_FILE, 
+				FilterType.Json,
 				func(path):
 					if path_is_valid(path):
 						save_path = path
@@ -65,10 +72,12 @@ func menu_select(index):
 		MenuIndex.Save:
 			if save_path == null:
 				menu_select(MenuIndex.SaveAs)
-			else:
+			else: 
 				Serialisation.save_to_json(conversations, save_path)
 		MenuIndex.SaveAs:
-			create_file_dialogue(FileDialog.FILE_MODE_SAVE_FILE, 
+			create_file_dialogue(
+				FileDialog.FILE_MODE_SAVE_FILE, 
+				FilterType.Lint,
 				func(path):
 					if path_is_valid(path):
 						save_path = path
@@ -77,25 +86,53 @@ func menu_select(index):
 		
 		MenuIndex.Export:
 			if export_path == null:
-				create_file_dialogue(FileDialog.FILE_MODE_SAVE_FILE, 
+				create_file_dialogue(
+					FileDialog.FILE_MODE_SAVE_FILE, 
+					FilterType.Json,
 					func(path):
 						if path_is_valid(path):
 							export_path = path
 							menu_select(MenuIndex.Export)
 				)
 			else:
-				Serialisation.save_to_json(serialise(), export_path)
+				var serialised_data = serialise(conversations)
+				Serialisation.save_to_json(serialised_data, export_path)
+				
 
-func serialise():
-	return conversations
+#Serialising involves flattening conversations to remove LintWidget.VALUE nesting
+func serialise(data):
+	match typeof(data):
+		TYPE_STRING:
+			return data
+		TYPE_ARRAY:
+			for i in len(data):
+				data[i] = serialise(data[i])
+			return data
+		TYPE_DICTIONARY:
+			var keys = data.keys()
+			for value in keys:
+				if value == LintWidget.VALUE:
+					data = serialise(data[value])
+					break
+				else:
+					data[value] = serialise(data[value])
+			return data
+		_:
+			print("Attempted to serialise data of unknown type: " + str(typeof(data)) + ":")
+			print(data)
 
 func path_is_valid(path):
 	return path != null and path != ""
 
-func create_file_dialogue(mode, callback):
+func create_file_dialogue(mode, filter_type, callback):
+	if filter_type == FilterType.Json:
+		filter_type = ["*.json ; JSON File"]
+	else:
+		filter_type = ["*.lnt ; Lint File"]
+	
 	var file_dialogue = FileDialog.new()
 	root_node.call_deferred("add_child", file_dialogue)
-	file_dialogue.set_filters(PackedStringArray(["*.json ; JSON File"]))
+	file_dialogue.set_filters(PackedStringArray(filter_type))
 	file_dialogue.set_file_mode(mode)
 	file_dialogue.set_access(FileDialog.ACCESS_FILESYSTEM)
 	file_dialogue.call_deferred("popup_centered")

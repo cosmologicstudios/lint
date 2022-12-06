@@ -1,5 +1,7 @@
 class_name LintWidget
 
+const VALUE = "__lint_value"
+
 static func create_margin(node):
 	var margin = MarginContainer.new()
 	margin.set_h_size_flags(Control.SIZE_EXPAND_FILL)
@@ -79,12 +81,12 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			text.set_fit_content_height_enabled(true)
 			text.set_h_size_flags(Control.SIZE_EXPAND_FILL)
 			
-			if line_data["value"] == null:
-				line_data["value"] = ""
-			text.set_text(line_data["value"])
+			if line_data[VALUE] == null:
+				line_data[VALUE] = ""
+			text.set_text(line_data[VALUE])
 			
 			text.connect("text_changed", (
-				func(line_data, text): line_data["value"] = text.get_text() 
+				func(line_data, text): line_data[VALUE] = text.get_text() 
 			).bind(line_data, text))
 			
 			box.add_child(label)
@@ -100,7 +102,7 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			
 			choices.connect("item_selected", (
 				func(index, line_data, option_button): 
-					line_data["value"] = option_button.get_item_metadata(index)
+					line_data[VALUE] = option_button.get_item_metadata(index)
 			).bind(line_data, choices))
 			
 			choices.connect("pressed", (
@@ -124,15 +126,15 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			
 			choices.connect("item_selected", (
 				func(index, line_data, option_button): 
-					line_data["value"] = option_button.get_item_metadata(index)
+					line_data[VALUE] = option_button.get_item_metadata(index)
 			).bind(line_data, choices))
 			
 			box.add_child(label)
 			box.add_child(choices)
 			
-			if line_data["value"] != null:
+			if line_data[VALUE] != null:
 				for i in len(type_data["choices"]):
-					if type_data["choices"][i] == line_data["value"]:
+					if type_data["choices"][i] == line_data[VALUE]:
 						choices.select(i)
 						break
 		
@@ -140,9 +142,9 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			var fields = type_data["fields"]
 			var type_fields = fields.keys()
 			
-			if line_data["value"] == null:
-				line_data["value"] = {}
-			var data = line_data["value"]
+			if line_data[VALUE] == null:
+				line_data[VALUE] = {}
+			var data = line_data[VALUE]
 			
 			if data_name != "":
 				var label = Label.new()
@@ -155,7 +157,7 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			
 			for field_name in type_fields:
 				if field_name not in data:
-					data[field_name] = { "value": null }
+					data[field_name] = { VALUE: null }
 				recurse_create_widgets(box, data[field_name], fields[field_name], field_name, lines, conversation)
 		
 		LintObject.TypeId.Option:
@@ -173,11 +175,11 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 				
 				if metadata != null:
 					metadata = metadata.call()
-					if line_data["value"] == null or line_data["value"].keys()[0] != option_name:
-						line_data["value"] = {
-							option_name: { "value": null }
+					if line_data[VALUE] == null or line_data[VALUE].keys()[0] != option_name:
+						line_data[VALUE] = {
+							option_name: { VALUE: null }
 						}
-					recurse_create_widgets(field_box, line_data["value"][option_name], metadata, "", lines, conversation)
+					recurse_create_widgets(field_box, line_data[VALUE][option_name], metadata, "", lines, conversation)
 			
 			var option_strings = type_data["options"].keys()
 			
@@ -203,9 +205,8 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 				options.set_item_metadata(i, option_func)
 			
 			#Have we already got a selection?
-			if line_data["value"] != null:
-				print(line_data)
-				var keys = line_data["value"].keys()
+			if line_data[VALUE] != null:
+				var keys = line_data[VALUE].keys()
 				var option_name = keys[0]
 				var options_keys = type_data["options"].keys()
 				var index = options_keys.find(option_name)
@@ -213,8 +214,8 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 				select_option.call(index, options, field_box, line_data)
 		
 		LintObject.TypeId.List:
-			if line_data["value"] == null:
-				line_data["value"] = []
+			if line_data[VALUE] == null:
+				line_data[VALUE] = []
 			
 			node = create_v_marginbox(node)
 			
@@ -239,12 +240,12 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			
 			var add_list_entry = func(node, line_data, type_data, item, lines, conversation):
 			#static func add_list_entry(node, line_data, type_data, item, lines):
-				var entry_data = { "value": null }
-				line_data["value"].append(entry_data)
-				create_list_entry(node, line_data["value"], entry_data, type_data, item, lines, conversation)
+				var entry_data = { VALUE: null }
+				line_data[VALUE].append(entry_data)
+				create_list_entry(node, line_data[VALUE], entry_data, type_data, item, lines, conversation)
 			
 			add_button.connect("pressed", add_list_entry.bind(items, line_data, item_type_data, "", lines, conversation))
 			
 			#(node, line_data, type_data, data_name, lines)
-			for entry_data in line_data["value"]:
-				create_list_entry(items, line_data["value"], entry_data, item_type_data, "", lines, conversation)
+			for entry_data in line_data[VALUE]:
+				create_list_entry(items, line_data[VALUE], entry_data, item_type_data, "", lines, conversation)

@@ -50,7 +50,6 @@ func set_conversation(conversation_name):
 	current_conversation_name = conversation_name
 	if conversation_name not in conversations:
 		conversations[conversation_name] = {
-			"name": conversation_name,
 			"lines": {}
 		}
 	conversation = conversations[conversation_name]
@@ -103,7 +102,7 @@ func create_line_node(pos, type, line=null, id=null):
 	if(line == null):
 		line = {
 			"type": type, 
-			"data": { "value": null } 
+			"data": { LintWidget.VALUE : null } 
 		}
 		conversation["lines"][id] = line
 	
