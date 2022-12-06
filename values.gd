@@ -143,7 +143,7 @@ func declare_defaults():
 		"Anne Bishop", "Kev Munro", "Nina Kraviz", "Takuya Ito", "Tom Rogers",
 	]
 	speakers.sort()
-	speakers.insert(0, "Narration")
+	speakers.insert(0, "Narrator")
 	
 	var items = [
 		"watch",
