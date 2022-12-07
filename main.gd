@@ -1,9 +1,12 @@
 extends Control
 
-var export_path = null
-var save_path = null
 var root_node
 var conversations = {}
+var project_data = {
+	"save_path": null,
+	"export_path": null,
+	"lines": {}
+}
 
 var base
 var values
@@ -19,7 +22,8 @@ enum MenuIndex {
 	Open,
 	Save,
 	SaveAs,
-	Export
+	Export,
+	ExportAs
 }
 
 func _ready():
@@ -31,7 +35,9 @@ func _ready():
 	menu_bar.add_item("Open")
 	menu_bar.add_item("Save")
 	menu_bar.add_item("Save As")
+	menu_bar.add_separator("", -1)
 	menu_bar.add_item("Export")
+	menu_bar.add_item("Export As")
 	menu_bar.connect("index_pressed", menu_select)
 	
 	base = Base.new(root_node)
@@ -54,50 +60,64 @@ func setup_lint():
 		print("Removed tree.")
 	
 	#If we are refreshing, the old references will be dropped
-	panel = LintPanel.new(base, panel_path, values, conversations)
-	tree = LintTree.new(base, tree_path, conversations, panel)
+	panel = LintPanel.new(base, panel_path, values, conversations, project_data)
+	tree = LintTree.new(base, tree_path, conversations, panel, project_data)
 
 func menu_select(index):
 	match index:
 		MenuIndex.Open:
 			create_file_dialogue(
+				project_data["save_path"],
 				FileDialog.FILE_MODE_OPEN_FILE, 
-				FilterType.Json,
+				FilterType.Lint,
 				func(path):
 					if path_is_valid(path):
-						save_path = path
-						conversations = Serialisation.load_from_json(path)
+						project_data["save_path"] = path
+						var data = Serialisation.load_from_json(path)
+						conversations = data["conversations"]
+						project_data = data["project_data"]
 						setup_lint()
 			)
 		MenuIndex.Save:
-			if save_path == null:
+			if project_data["save_path"] == null:
 				menu_select(MenuIndex.SaveAs)
 			else: 
-				Serialisation.save_to_json(conversations, save_path)
+				Serialisation.save_to_json({
+					"conversations": conversations,
+					"project_data": project_data
+				}, project_data["save_path"])
 		MenuIndex.SaveAs:
 			create_file_dialogue(
+				project_data["save_path"],
 				FileDialog.FILE_MODE_SAVE_FILE, 
 				FilterType.Lint,
 				func(path):
 					if path_is_valid(path):
-						save_path = path
-						Serialisation.save_to_json(conversations, path)
+						project_data["save_path"] = path
+						Serialisation.save_to_json({
+							"conversations": conversations,
+							"project_data": project_data
+						}, path)
 			)
 		
 		MenuIndex.Export:
-			if export_path == null:
-				create_file_dialogue(
-					FileDialog.FILE_MODE_SAVE_FILE, 
-					FilterType.Json,
-					func(path):
-						if path_is_valid(path):
-							export_path = path
-							menu_select(MenuIndex.Export)
-				)
+			if project_data["export_path"] == null:
+				menu_select(MenuIndex.ExportAs)
 			else:
 				var serialised_data = serialise(conversations.duplicate(true))
-				Serialisation.save_to_json(serialised_data, export_path)
-				print("Exported to " + export_path + ".")
+				Serialisation.save_to_json(serialised_data, project_data["export_path"])
+				print("Exported to " + project_data["export_path"] + ".")
+		MenuIndex.ExportAs:
+			create_file_dialogue(
+				project_data["export_path"],
+				FileDialog.FILE_MODE_SAVE_FILE, 
+				FilterType.Json,
+				func(path):
+					if path_is_valid(path):
+						project_data["export_path"] = path
+						menu_select(MenuIndex.Export)
+			)
+			
 
 #Serialising involves flattening conversations to remove LintWidget.VALUE nesting
 func serialise(data):
@@ -126,7 +146,7 @@ func serialise(data):
 func path_is_valid(path):
 	return path != null and path != ""
 
-func create_file_dialogue(mode, filter_type, callback):
+func create_file_dialogue(base_path, mode, filter_type, callback):
 	if filter_type == FilterType.Json:
 		filter_type = ["*.json ; JSON File"]
 	else:
@@ -141,14 +161,13 @@ func create_file_dialogue(mode, filter_type, callback):
 	file_dialogue.set_flag(Window.FLAG_POPUP, true)
 	file_dialogue.min_size = Vector2(800, 500)
 	file_dialogue.visible = true
-	var dialogue_path = save_path
-	if save_path == null:
-		dialogue_path = "/"
+	if base_path == null:
+		base_path = "/"
 	else:
-		file_dialogue.set_current_file(dialogue_path)
-		file_dialogue.set_current_path(dialogue_path)
+		file_dialogue.set_current_file(base_path)
+		file_dialogue.set_current_path(base_path)
 	
-	file_dialogue.set_current_dir(dialogue_path)
+	file_dialogue.set_current_dir(base_path)
 	
 	file_dialogue.mode_overrides_title = false
 	file_dialogue.title = "Select File Path"

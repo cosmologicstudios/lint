@@ -93,7 +93,6 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			box.add_child(text)
 		
 		LintObject.TypeId.Line:
-			var box = create_h_marginbox(node)
 			var label = Label.new()
 			label.text = data_name
 			var choices = OptionButton.new()
@@ -101,7 +100,6 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			
 			choices.connect("item_selected", (
 				func(index, line_data, choices): 
-					print(index)
 					var data = null
 					if index > 0:
 						data = choices.get_item_metadata(index)
@@ -139,7 +137,6 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			
 			choices.connect("item_selected", (
 				func(index, line_data, option_button): 
-					print(index)
 					var data = null
 					if index > 0:
 						data = option_button.get_item_metadata(index)
@@ -190,7 +187,6 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 					field_box.remove_child(child)
 				
 				if index <= 0:
-					print(index)
 					line_data[VALUE] = null
 				else:
 					var metadata = options.get_item_metadata(index)

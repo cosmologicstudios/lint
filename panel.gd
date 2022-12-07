@@ -13,13 +13,15 @@ var lines
 var conversations
 var conversation
 var current_conversation_name
+var project_data
 
-func _init(base, path, lint_values, conversation_data):
+func _init(base, path, lint_values, conversation_data, project):
 	base_singleton = base
 	panel_path = path
 	values = lint_values
 	lines = {}
 	conversations = conversation_data
+	project_data = project
 	print("Panel initialised.")
 
 func get_identifier():
@@ -65,15 +67,8 @@ func set_conversation(conversation_name):
 	for i in total:
 		var id = line_names[i]
 		var line = conversation["lines"][id]
-		
-		var sep = 50
-		var x_pos = sep + ((i % 2) * (NODE_WIDTH + sep))
-		var y_pos = sep + (floor(i / 2) * (NODE_HEIGHT + sep))
-		
-		if i % 2 == 1:
-			y_pos = y_pos + sep
-		
-		create_line_node(Vector2(x_pos, y_pos), line["type"], line, id, str_identifiers[i])
+		var data = project_data["lines"][id]
+		create_line_node(Vector2(data["x"], data["y"]), line["type"], line, id, str_identifiers[i])
 
 #Right click in panel to create context menu to create new node
 func panel_right_clicked(pos):
@@ -110,6 +105,12 @@ func create_line_node(pos, type, line, id, str_identifier):
 	graph_node.connect("mouse_entered", (
 		func(graph_edit, graph_node): graph_edit.set_selected(graph_node)
 	).bind(graph_edit, graph_node))
+	graph_node.connect("position_offset_changed", (
+		func(graph_node, id): 
+			var offset = graph_node.get_position_offset()
+			project_data["lines"][id]["x"] = offset.x
+			project_data["lines"][id]["y"] = offset.y
+	).bind(graph_node, id))
 	
 	graph_node.set_position_offset(pos)
 	graph_node.set_size(Vector2(NODE_WIDTH, NODE_HEIGHT))
@@ -133,6 +134,7 @@ func add_line_node(pos, type):
 		"data": { LintWidget.VALUE : null } 
 	}
 	conversation["lines"][id] = line
+	project_data["lines"][id] = { "x": pos.x, "y": pos.y }
 	
 	var str_identifier = register_line(id)
 	create_line_node(pos, type, line, id, str_identifier)
@@ -145,6 +147,7 @@ func register_line(id):
 #Deletes a node
 func delete_node(node, id):
 	conversation["lines"].erase(id)
+	project_data["lines"].erase(id)
 	lines.erase(id)
 	node.free()
 	print("Deleted line: " + id)

@@ -6,12 +6,14 @@ var base
 var panel
 var conversations
 var current_conversation = ""
+var project_data
 var _rename = null
 
-func _init(base_node, tree_path, conversation_data, main_panel):
+func _init(base_node, tree_path, conversation_data, main_panel, project):
 	base = base_node
 	conversations = conversation_data
 	panel = main_panel
+	project_data = project
 	
 	tree = Tree.new()
 	tree.set_allow_rmb_select(true)
@@ -116,6 +118,8 @@ func delete_selected_conversation():
 	if selected != null and selected != root:
 		var text = selected.get_text(0)
 		selected.free()
+		for line in conversations[text]:
+			project_data["lines"].erase(line)
 		conversations.erase(text)
 		print("Deleted conversation: " + text)
 		
