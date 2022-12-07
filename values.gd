@@ -110,8 +110,10 @@ class Type:
 					"variable": LintObject.Type.Value()
 				})),
 			"create_object": (func(): 
-				return LintObject.Type.Value()
-				),
+				return LintObject.Type.Struct({
+					"object": LintObject.Type.Value(),
+					"variable": LintObject.Type.Value()
+				})),
 			"delete_object": (func(): 
 				return LintObject.Type.Value()
 				),
@@ -162,7 +164,9 @@ func declare_defaults():
 	items.sort()
 	
 	var quests = [
-		"find bean", 
+		"back to whittlesea",
+		"ask around",
+		"the beast"
 	]
 	quests.sort()
 	

@@ -31,7 +31,7 @@ func _ready():
 	
 	root_node = get_tree().root
 	
-	var menu_bar = $MenuBar/File
+	var menu_bar = $MenuBar/File.get_popup()
 	menu_bar.add_item("Open")
 	menu_bar.add_item("Save")
 	menu_bar.add_item("Save As")

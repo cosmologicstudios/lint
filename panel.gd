@@ -1,7 +1,7 @@
 class_name LintPanel
 
-const NODE_WIDTH = 700
-const NODE_HEIGHT = 500
+const NODE_WIDTH = 1
+const NODE_HEIGHT = 1
 var graph_edit = null
 var panel_path
 var base_singleton
