@@ -131,7 +131,7 @@ func add_line_node(pos, type):
 	
 	var line = {
 		"type": type, 
-		"data": { LintWidget.VALUE : null } 
+		"data": { LintWidget.BOX : null } 
 	}
 	conversation["lines"][id] = line
 	project_data["lines"][id] = { "x": pos.x, "y": pos.y }

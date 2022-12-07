@@ -91,20 +91,20 @@ class Type:
 	
 	static func Signals(items, quests, skills):
 		var signals = {
-			"add_health": (func(): 
-				return LintObject.Type.Value()
-				),
 			"advance_quest": (func(quests): 
 				return LintObject.Type.Struct({
 					"quest": LintObject.Type.Choice(quests),
 					"stage": LintObject.Type.Value()
 				})).bind(quests),
+			"change_health": (func(): 
+				return LintObject.Type.Value()
+				),
 			"set_object_variable": (func(): 
 				return LintObject.Type.Struct({
 					"object": LintObject.Type.Value(),
 					"variable": LintObject.Type.Value()
 				})),
-			"add_object_variable": (func(): 
+			"change_object_variable": (func(): 
 				return LintObject.Type.Struct({
 					"object": LintObject.Type.Value(),
 					"variable": LintObject.Type.Value()
@@ -115,12 +115,12 @@ class Type:
 			"delete_object": (func(): 
 				return LintObject.Type.Value()
 				),
-			"add_item": (func(items): 
+			"change_item_count": (func(items): 
 				return LintObject.Type.Struct({
 					"item": LintObject.Type.Choice(items),
 					"number": LintObject.Type.Value()
 				})).bind(items), 
-			"add_skill_level": (func(skills): 
+			"change_skill_level": (func(skills): 
 				return LintObject.Type.Struct({
 					"skills": LintObject.Type.Choice(skills),
 					"level": LintObject.Type.Value()
@@ -174,6 +174,7 @@ func declare_defaults():
 	
 	declare_line_type("default", 
 		LintObject.Type.Struct({
+			"first_line": LintObject.Type.Choice(["False", "True"]),
 			"text": LintObject.Type.Value(),
 			"speaker": LintObject.Type.Choice(speakers),
 			"animation": LintObject.Type.Choice(animations),
@@ -188,6 +189,7 @@ func declare_defaults():
 	)
 	declare_line_type("choice", 
 		LintObject.Type.Struct({
+			"first_line": LintObject.Type.Choice(["False", "True"]),
 			"choices": LintObject.Type.List(LintObject.Type.Struct({
 				"text": LintObject.Type.Value(),
 				"go_to_line": LintObject.Type.Line(),

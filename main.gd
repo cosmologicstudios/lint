@@ -119,7 +119,7 @@ func menu_select(index):
 			)
 			
 
-#Serialising involves flattening conversations to remove LintWidget.VALUE nesting
+#Serialising involves flattening conversations to remove LintWidget.BOX nesting
 func serialise(data):
 	match typeof(data):
 		TYPE_STRING:
@@ -131,7 +131,7 @@ func serialise(data):
 		TYPE_DICTIONARY:
 			var keys = data.keys()
 			for value in keys:
-				if value == LintWidget.VALUE:
+				if value == LintWidget.BOX:
 					data = serialise(data[value])
 					break
 				else:
