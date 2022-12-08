@@ -8,6 +8,7 @@ enum TypeId {
 	List,
 	Struct,
 	Signals,
+	None,
 	Total
 }
 
@@ -25,6 +26,8 @@ func get_line_types():
 	return line_types
 
 class Type:
+	static func None():
+		return { "type": TypeId.None }
 	static func Value():
 		return { "type": TypeId.Value }
 	
@@ -58,6 +61,7 @@ class Type:
 	#Condition is actually just a pre-made Option
 	static func Condition():
 		var conditions = {
+			"none": func(): return LintObject.Type.None(),
 			"equals": (func(): 
 				return LintObject.Type.Struct({
 					"value1": LintObject.Type.Value(),
@@ -89,8 +93,11 @@ class Type:
 		var option = LintObject.Type.Option(conditions)
 		return option
 	
-	static func Signals(items, quests, skills):
+	static func Signals(items, quests, skills, sounds):
 		var signals = {
+			"play_sound": (func(sounds): 
+				return LintObject.Type.Choice(sounds)
+				).bind(sounds),
 			"advance_quest": (func(quests): 
 				return LintObject.Type.Struct({
 					"quest": LintObject.Type.Choice(quests),
@@ -164,11 +171,36 @@ func declare_defaults():
 	items.sort()
 	
 	var quests = [
-		"back to whittlesea",
-		"ask around",
+		"homecoming",
 		"the beast"
 	]
 	quests.sort()
+	
+	var sounds = [
+		"sfx_car_turn_on",
+		"sfx_car_horn",
+		"sfx_car_breaks",
+		"sfx_car_accelerate",
+		"sfx_car_blinker",
+		"sfx_car_turn_off",
+		"sfx_car_door_use",
+		"sfx_magpie_caw",
+		"ambient_town",
+		"ambient_car",
+		"sfx_door_use",
+		"sfx_dog_bark",
+		"sfx_cat_meow",
+		"sfx_crossing_press",
+		"sfx_crossing_pending",
+		"sfx_crossing_go",
+		"sfx_inventory_gain",
+		"sfx_inventory_loss",
+		"sfx_health_gain",
+		"sfx_health_loss",
+		"sfx_quest_new",
+		"sfx_quest_progress"
+	]
+	sounds.sort()
 	
 	var skills = [
 		"impulse", "backbone", "finesse", "cool", "cursed",
@@ -182,7 +214,7 @@ func declare_defaults():
 			"text": LintObject.Type.Value(),
 			"speaker": LintObject.Type.Choice(speakers),
 			"animation": LintObject.Type.Choice(animations),
-			"signals": LintObject.Type.Signals(items, quests, skills),
+			"signals": LintObject.Type.Signals(items, quests, skills, sounds),
 			"go_to_line": LintObject.Type.List(
 				LintObject.Type.Struct({
 					"line_id": LintObject.Type.Line(),
@@ -198,7 +230,7 @@ func declare_defaults():
 				"text": LintObject.Type.Value(),
 				"go_to_line": LintObject.Type.Line(),
 				"show_condition": LintObject.Type.Condition(),
-				"signals": LintObject.Type.Signals(items, quests, skills),
+				"signals": LintObject.Type.Signals(items, quests, skills, sounds),
 			}))
 		})
 	)
