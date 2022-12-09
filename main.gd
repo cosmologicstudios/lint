@@ -35,14 +35,23 @@ func _ready():
 	menu_bar.add_item("Open")
 	menu_bar.add_item("Save")
 	menu_bar.add_item("Save As")
-	menu_bar.add_separator("", -1)
 	menu_bar.add_item("Export")
 	menu_bar.add_item("Export As")
 	menu_bar.connect("index_pressed", menu_select)
-	
 	base = Base.new(root_node)
 	values = LintObject.new()
 	setup_lint()
+
+func settings_select(index, settings_bar):
+	match index:
+		0:
+			var checked = not settings_bar.is_item_checked(index)
+			settings_bar.set_item_checked(index, checked)
+			var val = 1
+			if checked:
+				val = 2
+			print(val)
+			ProjectSettings.set_setting("display/window/stretch/scale", val)
 
 func setup_lint():
 	var container = $ColorRect/MarginContainer/HSplitContainer
@@ -117,7 +126,6 @@ func menu_select(index):
 						project_data["export_path"] = path
 						menu_select(MenuIndex.Export)
 			)
-			
 
 #Serialising involves flattening conversations to remove LintWidget.BOX nesting
 func serialise(data):

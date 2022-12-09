@@ -95,6 +95,9 @@ class Type:
 	
 	static func Signals(items, quests, skills, sounds):
 		var signals = {
+			"fade": (func():
+				return LintObject.Type.Choice(["In", "Out"])
+				),
 			"play_sound": (func(sounds): 
 				return LintObject.Type.Choice(sounds)
 				).bind(sounds),
@@ -103,23 +106,24 @@ class Type:
 					"quest": LintObject.Type.Choice(quests),
 					"stage": LintObject.Type.Value()
 				})).bind(quests),
-			"change_health": (func(): 
-				return LintObject.Type.Value()
-				),
 			"set_object_variable": (func(): 
 				return LintObject.Type.Struct({
 					"object": LintObject.Type.Value(),
-					"variable": LintObject.Type.Value()
+					"variable": LintObject.Type.Value(),
+					"value": LintObject.Type.Value()
 				})),
 			"change_object_variable": (func(): 
 				return LintObject.Type.Struct({
 					"object": LintObject.Type.Value(),
-					"variable": LintObject.Type.Value()
+					"variable": LintObject.Type.Value(),
+					"value": LintObject.Type.Value()
 				})),
 			"create_object": (func(): 
 				return LintObject.Type.Struct({
 					"object": LintObject.Type.Value(),
-					"variable": LintObject.Type.Value()
+					"relative_x": LintObject.Type.Value(),
+					"relative_y": LintObject.Type.Value(),
+					"number": LintObject.Type.Value(),
 				})),
 			"delete_object": (func(): 
 				return LintObject.Type.Value()

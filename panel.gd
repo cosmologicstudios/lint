@@ -51,13 +51,11 @@ func set_conversation(conversation_name):
 	clear_conversation_widgets()
 	current_conversation_name = conversation_name
 	if conversation_name not in conversations:
-		conversations[conversation_name] = {
-			"lines": {}
-		}
+		conversations[conversation_name] = {}
 	conversation = conversations[conversation_name]
 	print("Selected conversation: " + conversation_name)
 	
-	var line_names = conversation["lines"].keys()
+	var line_names = conversation.keys()
 	var total = len(line_names)
 	var str_identifiers = []
 	for i in total:
@@ -66,9 +64,13 @@ func set_conversation(conversation_name):
 	#Create conversation widgets
 	for i in total:
 		var id = line_names[i]
-		var line = conversation["lines"][id]
+		var line = conversation[id]
 		var data = project_data["lines"][id]
-		create_line_node(Vector2(data["x"], data["y"]), line["type"], line, id, str_identifiers[i])
+		create_line_node(
+			Vector2(data["x"], data["y"]), 
+			line["type"], line, id, str_identifiers[i], 
+			Vector2(data["width"], data["height"])
+		)
 
 #Right click in panel to create context menu to create new node
 func panel_right_clicked(pos):
@@ -87,7 +89,7 @@ func panel_right_clicked(pos):
 	prompts.append("Cancel")
 	base_singleton.create_popup(prompts, funcs)
 
-func create_line_node(pos, type, line, id, str_identifier):
+func create_line_node(pos, type, line, id, str_identifier, size):
 	var graph_node = GraphNode.new()
 	graph_edit.add_child(graph_node)
 	
@@ -96,7 +98,10 @@ func create_line_node(pos, type, line, id, str_identifier):
 	graph_node.set_show_close_button(true)
 	
 	graph_node.connect("resize_request", (
-		func(min_size, graph_node): graph_node.set_size(min_size)
+		func(min_size, graph_node): 
+			graph_node.set_size(min_size)
+			project_data["lines"][id]["width"] = min_size.x
+			project_data["lines"][id]["height"] = min_size.y
 	).bind(graph_node))
 	graph_node.connect("close_request", base_singleton.create_popup.bind(
 		["Delete", "Cancel"],
@@ -113,7 +118,10 @@ func create_line_node(pos, type, line, id, str_identifier):
 	).bind(graph_node, id))
 	
 	graph_node.set_position_offset(pos)
-	graph_node.set_size(Vector2(NODE_WIDTH, NODE_HEIGHT))
+	if size == null:
+		graph_node.set_size(Vector2(NODE_WIDTH, NODE_HEIGHT))
+	else:
+		graph_node.set_size(size)
 	
 	graph_node.set_title(str_identifier + " | " + type + " | id: " + id)
 	
@@ -133,11 +141,11 @@ func add_line_node(pos, type):
 		"type": type, 
 		"data": { LintWidget.BOX : null } 
 	}
-	conversation["lines"][id] = line
+	conversation[id] = line
 	project_data["lines"][id] = { "x": pos.x, "y": pos.y }
 	
 	var str_identifier = register_line(id)
-	create_line_node(pos, type, line, id, str_identifier)
+	create_line_node(pos, type, line, id, str_identifier, null)
 
 func register_line(id):
 	var str_identifier = get_identifier()
@@ -146,7 +154,7 @@ func register_line(id):
 	
 #Deletes a node
 func delete_node(node, id):
-	conversation["lines"].erase(id)
+	conversation.erase(id)
 	project_data["lines"].erase(id)
 	lines.erase(id)
 	node.free()
