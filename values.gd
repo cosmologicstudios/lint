@@ -154,6 +154,7 @@ func declare_defaults():
 		"Donald Duffy", "Sam Mackenzie",
 		"Gary Lowe", "Ian Davies", "Irene Weber", "Kristie Wallace",
 		"Anne Bishop", "Kev Munro", "Nina Kraviz", "Takuya Ito", "Tom Rogers",
+		"Townie", 
 	]
 	speakers.sort()
 	speakers.insert(0, "Narrator")

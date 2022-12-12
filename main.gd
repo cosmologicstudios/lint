@@ -40,18 +40,14 @@ func _ready():
 	menu_bar.connect("index_pressed", menu_select)
 	base = Base.new(root_node)
 	values = LintObject.new()
+	
+	var config = Serialisation.load_config()
+	if config != null:
+		var data = Serialisation.load_from_json(config["path"])
+		conversations = data["conversations"]
+		project_data = data["project_data"]
+	
 	setup_lint()
-
-func settings_select(index, settings_bar):
-	match index:
-		0:
-			var checked = not settings_bar.is_item_checked(index)
-			settings_bar.set_item_checked(index, checked)
-			var val = 1
-			if checked:
-				val = 2
-			print(val)
-			ProjectSettings.set_setting("display/window/stretch/scale", val)
 
 func setup_lint():
 	var container = $ColorRect/MarginContainer/HSplitContainer
@@ -79,14 +75,16 @@ func menu_select(index):
 				project_data["save_path"],
 				FileDialog.FILE_MODE_OPEN_FILE, 
 				FilterType.Lint,
-				func(path):
-					if path_is_valid(path):
-						project_data["save_path"] = path
-						var data = Serialisation.load_from_json(path)
+				func(selected_path):
+					if path_is_valid(selected_path):
+						project_data["save_path"] = selected_path
+						var data = Serialisation.load_from_json(selected_path)
 						conversations = data["conversations"]
 						project_data = data["project_data"]
+						Serialisation.save_config(selected_path)
 						setup_lint()
 			)
+		
 		MenuIndex.Save:
 			if project_data["save_path"] == null:
 				menu_select(MenuIndex.SaveAs)
@@ -95,18 +93,20 @@ func menu_select(index):
 					"conversations": conversations,
 					"project_data": project_data
 				}, project_data["save_path"])
+		
 		MenuIndex.SaveAs:
 			create_file_dialogue(
 				project_data["save_path"],
 				FileDialog.FILE_MODE_SAVE_FILE, 
 				FilterType.Lint,
-				func(path):
-					if path_is_valid(path):
-						project_data["save_path"] = path
+				func(selected_path):
+					if path_is_valid(selected_path):
+						project_data["save_path"] = selected_path
 						Serialisation.save_to_json({
 							"conversations": conversations,
 							"project_data": project_data
-						}, path)
+						}, selected_path)
+						Serialisation.save_config(selected_path)
 			)
 		
 		MenuIndex.Export:
@@ -116,6 +116,7 @@ func menu_select(index):
 				var serialised_data = serialise(conversations.duplicate(true))
 				Serialisation.save_to_json(serialised_data, project_data["export_path"])
 				print("Exported to " + project_data["export_path"] + ".")
+		
 		MenuIndex.ExportAs:
 			create_file_dialogue(
 				project_data["export_path"],

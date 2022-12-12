@@ -120,6 +120,12 @@ func create_line_node(pos, type, line, id, str_identifier, size):
 	graph_node.set_position_offset(pos)
 	if size == null:
 		graph_node.set_size(Vector2(NODE_WIDTH, NODE_HEIGHT))
+		
+		#Pop in the defaults
+		project_data["lines"][id]["x"] = pos.x
+		project_data["lines"][id]["y"] = pos.y
+		project_data["lines"][id]["width"] = NODE_WIDTH
+		project_data["lines"][id]["height"] = NODE_HEIGHT
 	else:
 		graph_node.set_size(size)
 	
