@@ -101,6 +101,12 @@ class Type:
 			"play_sound": (func(sounds): 
 				return LintObject.Type.Choice(sounds)
 				).bind(sounds),
+			"play_music": (func(sounds): 
+				return LintObject.Type.Choice(sounds)
+				).bind(sounds),
+			"stop_music": (func(sounds): 
+				return LintObject.Type.Choice(sounds)
+				).bind(sounds),
 			"advance_quest": (func(quests): 
 				return LintObject.Type.Struct({
 					"quest": LintObject.Type.Choice(quests),
@@ -135,7 +141,7 @@ class Type:
 				})).bind(items), 
 			"change_skill_level": (func(skills): 
 				return LintObject.Type.Struct({
-					"skills": LintObject.Type.Choice(skills),
+					"skill": LintObject.Type.Choice(skills),
 					"level": LintObject.Type.Value()
 				})).bind(skills),
 		}
@@ -151,7 +157,7 @@ func declare_defaults():
 	]
 	var speakers = ["Narrator", "You"]
 	speakers.append_array(skills)
-	speakers.append_array([
+	var npcs = [
 		"Billy Vassiliou", "Beast", "Dad", "Mum", "Eddie Green", 
 		"Adrian Lu", "Donna Wright-Gorrie", "Sasha Pavic",
 		"Carter Mason", "Danny Burke", "Deborah Smith", "Dr Kimani", "Farah Saleh", "Lachlan King", "Riley King", "Lyndon Reed",
@@ -162,8 +168,9 @@ func declare_defaults():
 		"Gary Lowe", "Ian Davies", "Irene Weber", "Kristie Wallace",
 		"Anne Bishop", "Kev Munro", "Nina Kraviz", "Takuya Ito", "Tom Rogers",
 		"Townie", 
-	])
-	speakers.sort()
+	]
+	npcs.sort()
+	speakers.append_array(npcs)
 	
 	var items = [
 		"watch",
@@ -201,6 +208,8 @@ func declare_defaults():
 		"sfx_door_use",
 		"sfx_dog_bark",
 		"sfx_cat_meow",
+		"sfx_footsteps_approach",
+		"sfx_footsteps_leave",
 		"sfx_crossing_press",
 		"sfx_crossing_pending",
 		"sfx_crossing_go",
