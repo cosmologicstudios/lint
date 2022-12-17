@@ -144,7 +144,14 @@ class Type:
 
 func declare_defaults():
 	var animations = ["idle", "talk", "interact", "walk", "run", "sleep"]
-	var speakers = [
+	var skills = [
+		"impulse", "backbone", "finesse", "cool", "cursed",
+		"chronicler", "savvy", "artificer", "earthling", "blood",
+		"strange", "sharp", "dramaturgy", "domination", "empath"
+	]
+	var speakers = ["Narrator", "You"]
+	speakers.append_array(skills)
+	speakers.append_array([
 		"Billy Vassiliou", "Beast", "Dad", "Mum", "Eddie Green", 
 		"Adrian Lu", "Donna Wright-Gorrie", "Sasha Pavic",
 		"Carter Mason", "Danny Burke", "Deborah Smith", "Dr Kimani", "Farah Saleh", "Lachlan King", "Riley King", "Lyndon Reed",
@@ -155,9 +162,8 @@ func declare_defaults():
 		"Gary Lowe", "Ian Davies", "Irene Weber", "Kristie Wallace",
 		"Anne Bishop", "Kev Munro", "Nina Kraviz", "Takuya Ito", "Tom Rogers",
 		"Townie", 
-	]
+	])
 	speakers.sort()
-	speakers.insert(0, "Narrator")
 	
 	var items = [
 		"watch",
@@ -207,12 +213,6 @@ func declare_defaults():
 	]
 	sounds.sort()
 	
-	var skills = [
-		"impulse", "backbone", "finesse", "cool", "cursed",
-		"chronicler", "savvy", "tech", "earthling", "blood",
-		"strange", "sharp", "dramaturgy", "domination", "empath"
-	]
-	
 	declare_line_type("default", 
 		LintObject.Type.Struct({
 			"first_line": LintObject.Type.Choice(["False", "True"]),
@@ -233,6 +233,7 @@ func declare_defaults():
 			"first_line": LintObject.Type.Choice(["False", "True"]),
 			"choices": LintObject.Type.List(LintObject.Type.Struct({
 				"text": LintObject.Type.Value(),
+				"speaker": LintObject.Type.Choice(speakers),
 				"go_to_line": LintObject.Type.Line(),
 				"show_condition": LintObject.Type.Condition(),
 				"signals": LintObject.Type.Signals(items, quests, skills, sounds),
