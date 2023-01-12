@@ -41,7 +41,17 @@ func _ready():
 	base = Base.new(root_node)
 	values = LintObject.new()
 	
-	var config = Serialisation.load_config()
+	#var config = Serialisation.load_config()
+	var config = null
+	if config == null:
+		var default_path = OS.get_system_dir(OS.SystemDir.SYSTEM_DIR_DOCUMENTS) + "/GitHub/Beast/resources/dialogue_database.lnt"
+		if FileAccess.file_exists(default_path):
+			print("Default BEAST project found. Loading.")
+			config = {
+				"path": default_path,
+			}
+			Serialisation.save_config(config)
+	
 	if config != null:
 		var data = Serialisation.load_from_json(config["path"])
 		conversations = data["conversations"]
