@@ -8,46 +8,6 @@
 
 config_version=5
 
-_global_script_classes=[{
-"base": "RefCounted",
-"class": &"Base",
-"language": &"GDScript",
-"path": "res://base.gd"
-}, {
-"base": "RefCounted",
-"class": &"LintObject",
-"language": &"GDScript",
-"path": "res://values.gd"
-}, {
-"base": "RefCounted",
-"class": &"LintPanel",
-"language": &"GDScript",
-"path": "res://panel.gd"
-}, {
-"base": "RefCounted",
-"class": &"LintTree",
-"language": &"GDScript",
-"path": "res://tree.gd"
-}, {
-"base": "RefCounted",
-"class": &"LintWidget",
-"language": &"GDScript",
-"path": "res://widgets.gd"
-}, {
-"base": "RefCounted",
-"class": &"Serialisation",
-"language": &"GDScript",
-"path": "res://serialisation.gd"
-}]
-_global_script_class_icons={
-"Base": "",
-"LintObject": "",
-"LintPanel": "",
-"LintTree": "",
-"LintWidget": "",
-"Serialisation": ""
-}
-
 [application]
 
 config/name="lint"

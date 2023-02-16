@@ -12,6 +12,9 @@ var base
 var values
 var panel
 var tree
+var notification
+var notif_countdown = 0
+const NOTIF_COUNTDOWN_MAX = 360
 
 enum FilterType {
 	Lint,
@@ -29,9 +32,10 @@ enum MenuIndex {
 func _ready():
 	randomize()
 	
+	notification = get_node("Notification")
 	root_node = get_tree().root
 	
-	var menu_bar = $MenuBar/File.get_popup()
+	var menu_bar = get_node("MenuBar/File").get_popup()
 	menu_bar.add_item("Open")
 	menu_bar.add_item("Save")
 	menu_bar.add_item("Save As")
@@ -42,25 +46,59 @@ func _ready():
 	values = LintObject.new()
 	
 	#var config = Serialisation.load_config()
-	var config = null
-	if config == null:
-		var default_path = OS.get_system_dir(OS.SystemDir.SYSTEM_DIR_DOCUMENTS) + "/GitHub/Beast/resources/dialogue_database.lnt"
-		if FileAccess.file_exists(default_path):
-			print("Default BEAST project found. Loading.")
-			config = {
-				"path": default_path,
-			}
-			Serialisation.save_config(config)
+	var root_path = OS.get_system_dir(OS.SystemDir.SYSTEM_DIR_DOCUMENTS)
+	var default_save = root_path + "/GitHub/Beast/resources/dialogue_database.lnt"
+	var default_export = root_path + "/GitHub/Beast/resources/dialogue.json"
 	
-	if config != null:
+	if FileAccess.file_exists(default_save):
+		create_notification("Found The Beast godot project. Save/Export is pointing its path.")
+		var config = {
+			"path": default_save,
+		}
+		Serialisation.save_config(config)
+		project_data["save_path"] = default_save
+		project_data["export_path"] = default_export
+		
 		var data = Serialisation.load_from_json(config["path"])
-		conversations = data["conversations"]
-		project_data = data["project_data"]
+		if data.is_none():
+			create_notification("File at config path '"+config["path"]+"' could not be loaded. Alert COSMO.")
+		else:
+			data = data.unwrap()
+			conversations = data["conversations"]
+			project_data = data["project_data"]
+	else:
+		create_notification("Could not find The Beast godot project. Alert COSMO!")
 	
 	setup_lint()
 
+func _process(_delta):
+	handle_notifications()
+
+func handle_notifications():
+	if notification.visible:
+		notif_countdown -= 1
+		if notif_countdown < 0:
+			var notif_mod = notification.get_modulate()
+			notif_mod[3] -= 0.02
+			notification.set_modulate(notif_mod)
+			
+			if notif_mod[3] <= 0:
+				notification.visible = false
+	
+func create_notification(string):
+	print("Notification: " + string)
+	notification.set_modulate(Color(1.0, 1.0, 1.0, 1.0))
+	var button = notification.get_node("Button")
+	button.connect("pressed", func(): notif_countdown = 0)
+	notif_countdown = NOTIF_COUNTDOWN_MAX
+	if not notification.visible:
+		notification.visible = true
+		button.text = string
+	else:
+		button.text += "\n" + string
+
 func setup_lint():
-	var container = $ColorRect/MarginContainer/HSplitContainer
+	var container = get_node("ColorRect/MarginContainer/HSplitContainer")
 	var tree_path = container.get_node("Side")
 	var panel_path = container.get_node("Main")
 	
@@ -89,20 +127,28 @@ func menu_select(index):
 					if path_is_valid(selected_path):
 						project_data["save_path"] = selected_path
 						var data = Serialisation.load_from_json(selected_path)
-						conversations = data["conversations"]
-						project_data = data["project_data"]
-						Serialisation.save_config(selected_path)
-						setup_lint()
+						if data.is_none() or not ("conversations" in data and "project_data" in data):
+							create_notification("Load NOT successful. Attempted path: " + selected_path)
+						else:
+							data = data.unwrap()
+							conversations = data["conversations"]
+							project_data = data["project_data"]
+							Serialisation.save_config(selected_path)
+							setup_lint()
+							create_notification("Load successful from: " + selected_path)
 			)
 		
 		MenuIndex.Save:
-			if project_data["save_path"] == null:
+			var path = project_data["save_path"]
+			if path == null:
 				menu_select(MenuIndex.SaveAs)
 			else: 
-				Serialisation.save_to_json({
+				var saved = Serialisation.save_to_json({
 					"conversations": conversations,
 					"project_data": project_data
-				}, project_data["save_path"])
+				}, path)
+				
+				create_notification("Saved to " + path + "." if saved else "Save NOT successful. Attempted path: " + path)
 		
 		MenuIndex.SaveAs:
 			create_file_dialogue(
@@ -111,12 +157,12 @@ func menu_select(index):
 				FilterType.Lint,
 				func(selected_path):
 					if path_is_valid(selected_path):
-						project_data["save_path"] = selected_path
-						Serialisation.save_to_json({
+						var saved = Serialisation.save_to_json({
 							"conversations": conversations,
 							"project_data": project_data
 						}, selected_path)
 						Serialisation.save_config(selected_path)
+						create_notification("Saved to " + selected_path + "." if saved else "Save NOT successful. Attempted path: " + selected_path)
 			)
 		
 		MenuIndex.Export:
@@ -124,8 +170,11 @@ func menu_select(index):
 				menu_select(MenuIndex.ExportAs)
 			else:
 				var serialised_data = serialise(conversations.duplicate(true))
-				Serialisation.save_to_json(serialised_data, project_data["export_path"])
-				print("Exported to " + project_data["export_path"] + ".")
+				var saved = Serialisation.save_to_json(serialised_data, project_data["export_path"])
+				create_notification(
+					("Exported to: " if saved else "Could not export to: ") 
+					+ project_data["export_path"]
+				)
 		
 		MenuIndex.ExportAs:
 			create_file_dialogue(
@@ -159,8 +208,10 @@ func serialise(data):
 		TYPE_NIL:
 			return data
 		_:
-			print("Attempted to serialise data of unknown type: " + str(typeof(data)) + ":")
+			var error_msg = "Attempted to serialise data of unknown type: " + str(typeof(data)) + ":"
+			print(error_msg)
 			print(data)
+			create_notification(error_msg)
 
 func path_is_valid(path):
 	return path != null and path != ""

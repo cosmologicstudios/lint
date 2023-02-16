@@ -107,9 +107,7 @@ func create_line_node(pos, type, line, id, str_identifier, size):
 		["Delete", "Cancel"],
 		[delete_node.bind(graph_node, id)],
 	))
-	graph_node.connect("mouse_entered", (
-		func(graph_edit, graph_node): graph_edit.set_selected(graph_node)
-	).bind(graph_edit, graph_node))
+	graph_node.connect("mouse_entered", func(): graph_edit.set_selected(graph_node))
 	graph_node.connect("position_offset_changed", (
 		func(graph_node, id): 
 			var offset = graph_node.get_position_offset()
