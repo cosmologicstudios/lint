@@ -66,6 +66,8 @@ func _ready():
 			data = data.unwrap()
 			conversations = data["conversations"]
 			project_data = data["project_data"]
+			project_data["save_path"] = default_save
+			project_data["export_path"] = default_export
 	else:
 		create_notification("Could not find The Beast godot project. Alert COSMO!")
 	
