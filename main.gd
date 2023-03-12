@@ -1,19 +1,18 @@
 extends Control
 
+const VERSION = "1.0.6"
+
 var root_node
-var conversations = {}
-var project_data = {
-	"save_path": null,
-	"export_path": null,
-	"lines": {}
-}
+var conversations
+var project_data
 
 var base
 var values
 var panel
 var tree
+
 var notification
-var notif_countdown = 0
+var notif_countdown
 const NOTIF_COUNTDOWN_MAX = 360
 
 enum FilterType {
@@ -22,55 +21,52 @@ enum FilterType {
 }
 
 enum MenuIndex {
-	Open,
-	Save,
-	SaveAs,
-	Export,
-	ExportAs
+	New=0,
+	Open=1,
+	Save=2,
+	SaveAs=3,
+	Export=5,
+	ExportAs=6,
+	AutoDetectBeast=8
 }
 
 func _ready():
 	randomize()
 	
+	conversations = {}
+	project_data = {
+		"save_path": null,
+		"export_path": null,
+		"lines": {},
+		"version": VERSION
+	}
+	notif_countdown = 0
+	
 	notification = get_node("Notification")
 	root_node = get_tree().root
 	
 	var menu_bar = get_node("MenuBar/File").get_popup()
+	menu_bar.add_item("New")
 	menu_bar.add_item("Open")
 	menu_bar.add_item("Save")
 	menu_bar.add_item("Save As")
+	menu_bar.add_separator()
 	menu_bar.add_item("Export")
 	menu_bar.add_item("Export As")
+	menu_bar.add_separator()
+	menu_bar.add_item("Auto-detect Beast")
+	
 	menu_bar.connect("index_pressed", menu_select)
 	base = Base.new(root_node)
 	values = LintObject.new()
 	
-	#var config = Serialisation.load_config()
-	var root_path = OS.get_system_dir(OS.SystemDir.SYSTEM_DIR_DOCUMENTS)
-	var default_save = root_path + "/GitHub/Beast/resources/dialogue_database.lnt"
-	var default_export = root_path + "/GitHub/Beast/resources/dialogue.json"
-	
-	if FileAccess.file_exists(default_save):
-		create_notification("Found The Beast godot project. Save/Export is pointing its path.")
-		var config = {
-			"path": default_save,
-		}
-		Serialisation.save_config(config)
-		project_data["save_path"] = default_save
-		project_data["export_path"] = default_export
-		
-		var data = Serialisation.load_from_json(config["path"])
-		if data.is_none():
-			create_notification("File at config path '"+config["path"]+"' could not be loaded. Alert COSMO.")
-		else:
-			data = data.unwrap()
-			conversations = data["conversations"]
-			project_data = data["project_data"]
-			project_data["save_path"] = default_save
-			project_data["export_path"] = default_export
-	else:
-		create_notification("Could not find The Beast godot project. Alert COSMO!")
-	
+	var config = Serialisation.load_config()
+	if not config.is_none():
+		config = config.unwrap()
+		var result = load_project(config["path"])
+		if result == null:
+			Serialisation.save_config(null)
+			create_notification("Tried to load project at "+config["path"])
 	setup_lint()
 
 func _process(_delta):
@@ -115,29 +111,72 @@ func setup_lint():
 		print("Removed tree.")
 	
 	#If we are refreshing, the old references will be dropped
-	panel = LintPanel.new(base, panel_path, values, conversations, project_data)
-	tree = LintTree.new(base, tree_path, conversations, panel, project_data)
+	panel = LintPanel.new(base, panel_path, values, conversations, project_data, set_changes)
+	tree = LintTree.new(base, tree_path, conversations, panel, project_data, set_changes)
+	
+	set_changes(false)
+
+func set_changes(change_bool):
+	if change_bool:
+		pass
+	else:
+		pass
+
+func save_project(path):
+	if path_is_valid(path):
+		set_changes(false)
+		
+		var saved = Serialisation.save_to_json({
+			"conversations": conversations,
+			"project_data": project_data
+		}, path)
+		
+		Serialisation.save_config(path)
+		create_notification("Saved to " + path + "." if saved else "Save NOT successful. Attempted path: " + path)
+
+func load_project(save_path, export_path=null):
+	if path_is_valid(save_path):
+		var data = Serialisation.load_from_json(save_path)
+		if data.is_none():
+			create_notification("File at config path '"+save_path+"' is invalid and could not be loaded.")
+		else:
+			data = data.unwrap()
+			if not ("conversations" in data and "project_data" in data and "version" in data["project_data"]):
+				create_notification("File at config path '"+save_path+"' is invalid and could not be loaded.")
+				return null
+			else:
+				conversations = data["conversations"]
+				project_data = data["project_data"]
+				project_data["save_path"] = save_path
+				if export_path != null:
+					project_data["export_path"] = export_path
+				
+				Serialisation.save_config(save_path)
+				setup_lint()
+				
+				return data
+	else:
+		return null
 
 func menu_select(index):
 	match index:
+		MenuIndex.New:
+			Serialisation.save_config(null)
+			get_tree().reload_current_scene()
+			pass
+			
 		MenuIndex.Open:
 			create_file_dialogue(
 				project_data["save_path"],
 				FileDialog.FILE_MODE_OPEN_FILE, 
 				FilterType.Lint,
-				func(selected_path):
-					if path_is_valid(selected_path):
-						project_data["save_path"] = selected_path
-						var data = Serialisation.load_from_json(selected_path)
-						if data.is_none() or not ("conversations" in data and "project_data" in data):
-							create_notification("Load NOT successful. Attempted path: " + selected_path)
-						else:
-							data = data.unwrap()
-							conversations = data["conversations"]
-							project_data = data["project_data"]
-							Serialisation.save_config(selected_path)
-							setup_lint()
-							create_notification("Load successful from: " + selected_path)
+				func(path):
+					var result = load_project(path)
+					create_notification(
+						"Open NOT successful. Attempted path: " + 
+						path if result == null 
+						else "Successfully opened project at: " + path
+					)
 			)
 		
 		MenuIndex.Save:
@@ -145,26 +184,14 @@ func menu_select(index):
 			if path == null:
 				menu_select(MenuIndex.SaveAs)
 			else: 
-				var saved = Serialisation.save_to_json({
-					"conversations": conversations,
-					"project_data": project_data
-				}, path)
-				
-				create_notification("Saved to " + path + "." if saved else "Save NOT successful. Attempted path: " + path)
+				save_project(path)
 		
 		MenuIndex.SaveAs:
 			create_file_dialogue(
 				project_data["save_path"],
 				FileDialog.FILE_MODE_SAVE_FILE, 
 				FilterType.Lint,
-				func(selected_path):
-					if path_is_valid(selected_path):
-						var saved = Serialisation.save_to_json({
-							"conversations": conversations,
-							"project_data": project_data
-						}, selected_path)
-						Serialisation.save_config(selected_path)
-						create_notification("Saved to " + selected_path + "." if saved else "Save NOT successful. Attempted path: " + selected_path)
+				save_project
 			)
 		
 		MenuIndex.Export:
@@ -174,8 +201,8 @@ func menu_select(index):
 				var serialised_data = serialise(conversations.duplicate(true))
 				var saved = Serialisation.save_to_json(serialised_data, project_data["export_path"])
 				create_notification(
-					("Exported to: " if saved else "Could not export to: ") 
-					+ project_data["export_path"]
+					"Exported to: " if saved 
+					else "Could not export to: "+ project_data["export_path"]
 				)
 		
 		MenuIndex.ExportAs:
@@ -188,6 +215,22 @@ func menu_select(index):
 						project_data["export_path"] = path
 						menu_select(MenuIndex.Export)
 			)
+		
+		MenuIndex.AutoDetectBeast:
+			var root_path = OS.get_system_dir(OS.SystemDir.SYSTEM_DIR_DOCUMENTS)
+			var default_save = root_path + "/GitHub/Beast/resources/dialogue_database.lnt"
+			var default_export = root_path + "/GitHub/Beast/resources/dialogue.json"
+			var result = null
+			if FileAccess.file_exists(default_save):
+				result = load_project(default_save, default_export)
+			
+			create_notification(
+				"Found The Beast godot project. Save/Export has been set to: "+default_save
+				if result == null 
+				else "Could not detect The Beast project in default location: " + default_save
+			)
+		_:
+			print("Unknown menu index: " + str(index))
 
 #Serialising involves flattening conversations to remove LintWidget.BOX nesting
 func serialise(data):

@@ -32,6 +32,15 @@ static func save_config(path) -> bool:
 
 static func load_config() -> Option:
 	if FileAccess.file_exists(CONFIG_PATH):
-		return load_from_json(CONFIG_PATH)
+		var data = load_from_json(CONFIG_PATH)
+		if data.is_none():
+			return data
+		else:
+			data = data.unwrap()
+			if "path" not in data or data["path"] == null:
+				return Option.None()
+			else:
+				return Option.Some(data)
 	else: 
+		print("No CONFIG file found.")
 		return Option.None()

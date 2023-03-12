@@ -14,8 +14,11 @@ var conversations
 var conversation
 var current_conversation_name
 var project_data
+var set_changes
 
-func _init(base, path, lint_values, conversation_data, project):
+func _init(base, path, lint_values, conversation_data, project, change_func):
+	set_changes = change_func
+	
 	base_singleton = base
 	panel_path = path
 	values = lint_values
@@ -90,6 +93,8 @@ func panel_right_clicked(pos):
 	base_singleton.create_popup(prompts, funcs)
 
 func create_line_node(pos, type, line, id, str_identifier, size):
+	set_changes.call(true)
+	
 	var graph_node = GraphNode.new()
 	graph_edit.add_child(graph_node)
 	
@@ -158,6 +163,8 @@ func register_line(id):
 	
 #Deletes a node
 func delete_node(node, id):
+	set_changes.call(true)
+	
 	conversation.erase(id)
 	project_data["lines"].erase(id)
 	lines.erase(id)

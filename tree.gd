@@ -8,8 +8,11 @@ var conversations
 var current_conversation = ""
 var project_data
 var _rename = null
+var set_changes
 
-func _init(base_node, tree_path, conversation_data, main_panel, project):
+func _init(base_node, tree_path, conversation_data, main_panel, project, changes_func):
+	set_changes = changes_func
+	
 	base = base_node
 	conversations = conversation_data
 	panel = main_panel
@@ -54,6 +57,8 @@ func item_selected():
 
 ###Conversations
 func create_conversation(conversation=""):
+	set_changes.call(true)
+	
 	var convo = tree.create_item(root)
 	
 	#If this is a 'new' conversation, we want to edit the name
@@ -95,13 +100,13 @@ func validate_item_edited():
 		conversations[text] = old
 		conversations.erase(_rename)
 	
+	set_changes.call(true)
 	_rename = null
 	print("Named conversation: " + text)
 	panel.set_conversation(text)
 
 #Renames the selected TreeItem
 func rename_selected_conversation():
-	
 	var selected = tree.get_selected()
 	if selected != null:
 		_rename = selected.get_text(0)
@@ -116,6 +121,8 @@ func rename_selected_conversation():
 func delete_selected_conversation():
 	var selected = tree.get_selected()
 	if selected != null and selected != root:
+		set_changes.call(true)
+		
 		var text = selected.get_text(0)
 		selected.free()
 		for line in conversations[text]:
