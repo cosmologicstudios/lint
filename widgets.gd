@@ -41,7 +41,7 @@ static func create_list_entry(node, list, entry_data, type_data, item, lines, co
 	delete.connect("pressed", (func(box, list, entry_data): 
 		list.erase(entry_data)
 		box.queue_free()
-		print("Deleted entry.")
+		Global.Log("Deleted entry from widget")
 	).bind(box, list, entry_data))
 	
 	box.add_child(delete)

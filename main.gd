@@ -1,7 +1,5 @@
 extends Control
 
-const VERSION = "1.0.6"
-
 var root_node
 var conversations
 var project_data
@@ -15,19 +13,13 @@ var notification
 var notif_countdown
 const NOTIF_COUNTDOWN_MAX = 360
 
-enum FilterType {
-	Lint,
-	Json
-}
-
 enum MenuIndex {
-	New=0,
-	Open=1,
-	Save=2,
-	SaveAs=3,
-	Export=5,
-	ExportAs=6,
-	AutoDetectBeast=8
+	New,
+	Open,
+	Save,
+	SaveAs,
+	Export,
+	ExportAs,
 }
 
 func _ready():
@@ -35,10 +27,10 @@ func _ready():
 	
 	conversations = {}
 	project_data = {
-		"save_path": null,
+		"save_path": Global.path,
 		"export_path": null,
 		"lines": {},
-		"version": VERSION
+		"version": Base.VERSION
 	}
 	notif_countdown = 0
 	
@@ -63,7 +55,7 @@ func _ready():
 	var config = Serialisation.load_config()
 	if not config.is_none():
 		config = config.unwrap()
-		var result = load_project(config["path"])
+		var result = load_project(Global.path)
 		if result == null:
 			Serialisation.save_config(null)
 			create_notification("Tried to load project at "+config["path"])
@@ -84,7 +76,6 @@ func handle_notifications():
 				notification.visible = false
 	
 func create_notification(string):
-	print("Notification: " + string)
 	notification.set_modulate(Color(1.0, 1.0, 1.0, 1.0))
 	var button = notification.get_node("Button")
 	button.connect("pressed", func(): notif_countdown = 0)
@@ -104,11 +95,11 @@ func setup_lint():
 	var panel_children = panel_path.get_children()
 	for child in panel_children:
 		panel_path.remove_child(child)
-		print("Removed panel.")
+		Global.Log("Removed panel.")
 	var tree_children = tree_path.get_children()
 	for child in tree_children:
 		tree_path.remove_child(child)
-		print("Removed tree.")
+		Global.Log("Removed tree.")
 	
 	#If we are refreshing, the old references will be dropped
 	panel = LintPanel.new(base, panel_path, values, conversations, project_data, set_changes)
@@ -161,15 +152,13 @@ func load_project(save_path, export_path=null):
 func menu_select(index):
 	match index:
 		MenuIndex.New:
-			Serialisation.save_config(null)
 			get_tree().reload_current_scene()
-			pass
 			
 		MenuIndex.Open:
 			create_file_dialogue(
 				project_data["save_path"],
 				FileDialog.FILE_MODE_OPEN_FILE, 
-				FilterType.Lint,
+				Global.FilterType.Lint,
 				func(path):
 					var result = load_project(path)
 					create_notification(
@@ -190,7 +179,7 @@ func menu_select(index):
 			create_file_dialogue(
 				project_data["save_path"],
 				FileDialog.FILE_MODE_SAVE_FILE, 
-				FilterType.Lint,
+				Global.FilterType.Lint,
 				save_project
 			)
 		
@@ -209,28 +198,14 @@ func menu_select(index):
 			create_file_dialogue(
 				project_data["export_path"],
 				FileDialog.FILE_MODE_SAVE_FILE, 
-				FilterType.Json,
+				Global.FilterType.Json,
 				func(path):
 					if path_is_valid(path):
 						project_data["export_path"] = path
 						menu_select(MenuIndex.Export)
 			)
-		
-		MenuIndex.AutoDetectBeast:
-			var root_path = OS.get_system_dir(OS.SystemDir.SYSTEM_DIR_DOCUMENTS)
-			var default_save = root_path + "/GitHub/Beast/resources/dialogue_database.lnt"
-			var default_export = root_path + "/GitHub/Beast/resources/dialogue.json"
-			var result = null
-			if FileAccess.file_exists(default_save):
-				result = load_project(default_save, default_export)
-			
-			create_notification(
-				"Found The Beast godot project. Save/Export has been set to: "+default_save
-				if result == null 
-				else "Could not detect The Beast project in default location: " + default_save
-			)
 		_:
-			print("Unknown menu index: " + str(index))
+			Global.Log("Unknown menu index: {}", [str(index)])
 
 #Serialising involves flattening conversations to remove LintWidget.BOX nesting
 func serialise(data):
@@ -253,16 +228,15 @@ func serialise(data):
 		TYPE_NIL:
 			return data
 		_:
-			var error_msg = "Attempted to serialise data of unknown type: " + str(typeof(data)) + ":"
-			print(error_msg)
-			print(data)
+			var error_msg = "Attempted to serialise data of unknown type: {}" + str(typeof(data)) + ":"
+			Global.Log(error_msg, [data])
 			create_notification(error_msg)
 
 func path_is_valid(path):
 	return path != null and path != ""
 
 func create_file_dialogue(base_path, mode, filter_type, callback):
-	if filter_type == FilterType.Json:
+	if filter_type == Global.FilterType.Json:
 		filter_type = ["*.json ; JSON File"]
 	else:
 		filter_type = ["*.lnt ; Lint File"]

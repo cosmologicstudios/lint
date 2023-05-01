@@ -1,5 +1,7 @@
 class_name Base
 
+const VERSION = "1.0.7"
+
 var node
 
 func _init(base_node):
