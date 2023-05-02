@@ -16,7 +16,6 @@ var line_types = {}
 
 func _init():
 	declare_defaults()
-	
 	print("Declared default line types.")
 
 func declare_line_type(name_string, struct):

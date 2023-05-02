@@ -1,22 +1,28 @@
 extends Control
 
-@onready var recent_files = $Right/Right/VBoxContainer/ScrollContainer/VBoxContainer
-@onready var version = $ColorRect/CenterContainer/logo/version
-var Main = preload("res://main.gd")
-
 # Called when the node enters the scene tree for the first time.
-func _ready():
-	var config = Serialisation.load_config()
-	
+func _ready():	
 	#Update version
-	version.set_text(Base.VERSION)
-	Global.Log("Starting project, version: {}.", [Base.VERSION])
+	$ColorRect/CenterContainer/logo/version.set_text(Global.VERSION)
+	Global.debug_log("Starting project, version: {}.", [Global.VERSION])
+	
+	#Set up buttons
+	var buttons = $Left/MarginContainer/VBoxContainer
+	buttons.get_node("New").connect("pressed", new_project)
+	buttons.get_node("Open").connect("pressed", open_project)
+	buttons.get_node("GitHub").connect("pressed", func(): OS.shell_open("https://github.com/cosmologicstudios/lint"))
 	
 	#Display recent files
+	display_recent_files()
+
+func display_recent_files():
+	var config = Serialisation.load_config()
 	if !config.is_none():
 		config = config.unwrap()
 		#We may delete entries so we iterate over a copy
 		var entries = config["recent"].duplicate()
+		
+		var recent_files = $Right/Right/VBoxContainer/ScrollContainer/VBoxContainer
 		for file_name in entries:
 			#Remove this from our config if file does not exist
 			if FileAccess.file_exists(file_name):
@@ -25,30 +31,43 @@ func _ready():
 				but.text_overrun_behavior = TextServer.OverrunBehavior.OVERRUN_TRIM_ELLIPSIS
 				var file = file_name.get_file()
 				but.set_text(file.trim_suffix(".lnt"))
+				but.connect("pressed", load_project.bind(file_name))
 			else:
-				Global.Log("File {} was not found. Removing from recent files.", [file_name])
+				Global.debug_log("File {} was not found. Removing from recent files.", [file_name])
 				config["recent"].erase(file_name)
 		
 		#Save the config - we may have deleted some recent files
 		Serialisation.save_config(config)
 
 func new_project():
-	get_tree().reload_current_scene()
-
-func open_project():
-	create_file_dialogue(
+	Global.create_file_dialogue(
 		"",
-		FileDialog.FILE_MODE_OPEN_FILE, 
-		FilterType.Lint,
-		func(path):
-			var result = load_project(Global.path)
-			create_notification(
-				"Open NOT successful. Attempted path: " + 
-				path if result == null 
-				else "Successfully opened project at: " + path
-			)
+		FileDialog.FILE_MODE_SAVE_FILE, 
+		Global.FilterType.Lint,
+		func(save_path):
+			Global.project_data = Global.blank_project()
+			if Serialisation.path_is_valid(save_path):
+				Global.project_data["save_path"] = save_path
+				Serialisation.save_to_json(Global.project_data, save_path)
+				get_tree().change_scene_to_file("res://main.tscn")
 	)
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta):
-	pass
+func open_project():
+	Global.create_file_dialogue(
+		"",
+		FileDialog.FILE_MODE_OPEN_FILE, 
+		Global.FilterType.Lint,
+		func(save_path):
+			load_project(save_path)
+	)
+
+func load_project(save_path):
+	if Serialisation.path_is_valid(save_path):
+		var data = Serialisation.load_from_json(save_path)
+		if data.is_none():
+			Global.debug_log("File at path '{}' is invalid and could not be loaded.", [save_path])
+		else:
+			Global.project_data = data.unwrap()
+			get_tree().change_scene_to_file("res://main.tscn")
+	else:
+		Global.debug_log("Open NOT successful. Attempted path: " + save_path)

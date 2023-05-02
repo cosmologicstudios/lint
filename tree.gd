@@ -2,21 +2,12 @@ class_name LintTree
 
 var tree
 var root
-var base
 var panel
-var conversations
 var current_conversation = ""
-var project_data
 var _rename = null
-var set_changes
 
-func _init(base_node, tree_path, conversation_data, main_panel, project, changes_func):
-	set_changes = changes_func
-	
-	base = base_node
-	conversations = conversation_data
-	panel = main_panel
-	project_data = project
+func _init(tree_node, lint_panel):
+	panel = lint_panel
 	
 	tree = Tree.new()
 	tree.set_allow_rmb_select(true)
@@ -25,7 +16,7 @@ func _init(base_node, tree_path, conversation_data, main_panel, project, changes
 	tree.set_drop_mode_flags(Tree.DROP_MODE_ON_ITEM)
 	tree.set_hide_root(true)
 	
-	tree_path.add_child(tree)
+	tree_node.add_child(tree)
 	root = tree.create_item()
 	
 	tree.connect("gui_input", _gui_input)
@@ -33,7 +24,7 @@ func _init(base_node, tree_path, conversation_data, main_panel, project, changes
 	tree.connect("item_edited", validate_item_edited)
 	tree.connect("cell_selected", item_selected)
 	
-	for conversation in conversations.keys():
+	for conversation in Global.project_data["conversations"].keys():
 		create_conversation(conversation)
 	
 	print("Tree intialised.")
@@ -41,7 +32,7 @@ func _init(base_node, tree_path, conversation_data, main_panel, project, changes
 func _gui_input(event):
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-			base.create_popup(
+			Global.create_popup(
 				["Create New", "Rename", "Delete", "", "Cancel"],
 				[create_conversation, rename_selected_conversation, delete_selected_conversation],
 			)
@@ -57,7 +48,7 @@ func item_selected():
 
 ###Conversations
 func create_conversation(conversation=""):
-	set_changes.call(true)
+	Global.unsaved_changes = true
 	
 	var convo = tree.create_item(root)
 	
@@ -95,12 +86,13 @@ func validate_item_edited():
 	if text == "":
 		text = generate_name(_rename)
 		item.set_text(0, text)
-	elif _rename in conversations:
-		var old = conversations[_rename] 
-		conversations[text] = old
-		conversations.erase(_rename)
+	elif _rename in Global.project_data["conversations"]:
+		var old = Global.project_data["conversations"][_rename] 
+		Global.project_data["conversations"][text] = old
+		Global.project_data["conversations"].erase(_rename)
 	
-	set_changes.call(true)
+	Global.unsaved_changes = true
+	
 	_rename = null
 	print("Named conversation: " + text)
 	panel.set_conversation(text)
@@ -121,13 +113,13 @@ func rename_selected_conversation():
 func delete_selected_conversation():
 	var selected = tree.get_selected()
 	if selected != null and selected != root:
-		set_changes.call(true)
+		Global.unsaved_changes = true
 		
 		var text = selected.get_text(0)
 		selected.free()
-		for line in conversations[text]:
-			project_data["lines"].erase(line)
-		conversations.erase(text)
+		for line in Global.project_data["conversations"][text]:
+			Global.project_data["lines"].erase(line)
+		Global.project_data["conversations"].erase(text)
 		print("Deleted conversation: " + text)
 		
 		panel.clear_conversation_widgets()
