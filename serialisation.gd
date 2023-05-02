@@ -30,16 +30,16 @@ static func load_from_json(path) -> Option:
 static func save_config(config) -> bool:
 	return save_to_json(config, CONFIG_PATH)
 
-static func load_config() -> Option:
+static func load_config() -> Dictionary:
 	if FileAccess.file_exists(CONFIG_PATH):
-		return load_from_json(CONFIG_PATH)
+		return load_from_json(CONFIG_PATH).unwrap()
 	else: 
 		print("No CONFIG file found, creating default.")
-		return Option.Some({
+		return {
 			"version": Global.VERSION,
 			"recent": [],
 			"settings": {}
-		})
+		}
 
 static func path_is_valid(path):
 	return path != null and path != ""

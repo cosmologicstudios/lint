@@ -42,7 +42,7 @@ func _ready():
 	Global.unsaved_changes = false
 	
 	#Check our config
-	var config = Serialisation.load_config().unwrap()
+	var config = Serialisation.load_config()
 	if config["version"] != Global.VERSION:
 		Global.debug_log("Config is version {} but project is version {}", [config["version"], Global.VERSION])
 	

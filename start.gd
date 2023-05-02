@@ -17,27 +17,25 @@ func _ready():
 
 func display_recent_files():
 	var config = Serialisation.load_config()
-	if !config.is_none():
-		config = config.unwrap()
-		#We may delete entries so we iterate over a copy
-		var entries = config["recent"].duplicate()
-		
-		var recent_files = $Right/Right/VBoxContainer/ScrollContainer/VBoxContainer
-		for file_name in entries:
-			#Remove this from our config if file does not exist
-			if FileAccess.file_exists(file_name):
-				var but = Button.new()
-				recent_files.add_child(but)
-				but.text_overrun_behavior = TextServer.OverrunBehavior.OVERRUN_TRIM_ELLIPSIS
-				var file = file_name.get_file()
-				but.set_text(file.trim_suffix(".lnt"))
-				but.connect("pressed", load_project.bind(file_name))
-			else:
-				Global.debug_log("File {} was not found. Removing from recent files.", [file_name])
-				config["recent"].erase(file_name)
-		
-		#Save the config - we may have deleted some recent files
-		Serialisation.save_config(config)
+	#We may delete entries so we iterate over a copy
+	var entries = config["recent"].duplicate()
+	
+	var recent_files = $Right/Right/VBoxContainer/ScrollContainer/VBoxContainer
+	for file_name in entries:
+		#Remove this from our config if file does not exist
+		if FileAccess.file_exists(file_name):
+			var but = Button.new()
+			recent_files.add_child(but)
+			but.text_overrun_behavior = TextServer.OverrunBehavior.OVERRUN_TRIM_ELLIPSIS
+			var file = file_name.get_file()
+			but.set_text(file.trim_suffix(".lnt"))
+			but.connect("pressed", load_project.bind(file_name))
+		else:
+			Global.debug_log("File {} was not found. Removing from recent files.", [file_name])
+			config["recent"].erase(file_name)
+	
+	#Save the config - we may have deleted some recent files
+	Serialisation.save_config(config)
 
 func new_project():
 	Global.create_file_dialogue(
