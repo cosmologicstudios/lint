@@ -15,7 +15,7 @@ enum MenuIndex {
 	ExportAs=6,
 }
 
-func _ready():
+func _enter_tree():
 	randomize()
 	
 	notif_countdown = 0
@@ -52,6 +52,7 @@ func _ready():
 	config["recent"].push_front(Global.project_data["save_path"])
 	
 	Serialisation.save_config(config)
+	print(config)
 
 func _process(_delta):
 	handle_notifications()
@@ -91,6 +92,8 @@ func save_project(path):
 		create_notification("Saved to: " + path)
 	else:
 		create_notification("Save NOT successful. Attempted path: " + path)
+	
+	get_tree().reload_current_scene()
 
 func menu_select(index):
 	match index:

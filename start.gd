@@ -1,7 +1,6 @@
 extends Control
 
-# Called when the node enters the scene tree for the first time.
-func _ready():	
+func _enter_tree():
 	#Update version
 	$ColorRect/CenterContainer/logo/version.set_text(Global.VERSION)
 	Global.debug_log("Starting project, version: {}.", [Global.VERSION])
@@ -46,7 +45,7 @@ func new_project():
 			Global.project_data = Global.blank_project()
 			if Serialisation.path_is_valid(save_path):
 				Global.project_data["save_path"] = save_path
-				Serialisation.save_to_json(Global.project_data, save_path)
+				Serialisation.save_to_json(Global.project_data.duplicate(true), save_path)
 				get_tree().change_scene_to_file("res://main.tscn")
 	)
 
