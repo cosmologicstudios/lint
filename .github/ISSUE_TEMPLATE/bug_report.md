@@ -19,7 +19,7 @@ Steps to reproduce the behavior:
 4. See error
 
 **Describe the bug**
-A clear and concise description of what the bug is and what you expected to happen.
+Describe what the bug is and what you expected to happen.
 
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
