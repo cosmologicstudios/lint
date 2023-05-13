@@ -3,7 +3,7 @@ name: Feature request
 about: Suggest an idea for Lint
 title: Short description of feature request
 labels: request
-assignees: ''
+assignees: 'friendlycosmonaut'
 
 ---
 
@@ -15,5 +15,3 @@ Describe what you want to happen.
 
 **Describe alternatives you've considered**
 Describe any alternative solutions or features you've considered.
-
-*Thank you for taking the time to fill out a feature request :).*
