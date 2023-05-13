@@ -15,21 +15,43 @@ enum MenuIndex {
 	ExportAs=6,
 }
 
+func setup_menu_bar():
+	var menu_bar = get_node("MenuBar/HBoxContainer")
+	var file = menu_bar.get_node("File").get_popup()
+	file.add_item("Main Menu")
+	file.add_separator()
+	file.add_item("Save")
+	file.add_item("Save As")
+	file.add_separator()
+	file.add_item("Export")
+	file.add_item("Export As")
+	file.connect("index_pressed", menu_select)
+	
+	var options = menu_bar.get_node("Options").get_popup()
+	options.add_item("Preferences (todo)")
+	
+	var help = menu_bar.get_node("Help").get_popup()
+	help.add_item("Documentation")
+	help.add_item("Report Bug")
+	help.add_item("Feature Request")
+	help.connect("index_pressed", 
+		func(index): 
+			match index:
+				0:
+					OS.shell_open("https://github.com/cosmologicstudios/lint/wiki")
+				1, 2:
+					OS.shell_open("https://github.com/cosmologicstudios/lint/issues/new/choose")
+				_:
+					OS.shell_open("https://github.com/cosmologicstudios/lint")
+	)
+
 func _enter_tree():
 	randomize()
 	
 	notif_countdown = 0
 	notification = get_node("Notification")
 	
-	var menu_bar = get_node("MenuBar/File").get_popup()
-	menu_bar.add_item("Main Menu")
-	menu_bar.add_separator()
-	menu_bar.add_item("Save")
-	menu_bar.add_item("Save As")
-	menu_bar.add_separator()
-	menu_bar.add_item("Export")
-	menu_bar.add_item("Export As")
-	menu_bar.connect("index_pressed", menu_select)
+	setup_menu_bar()
 	
 	var values = LintObject.new()
 	var container = get_node("ColorRect/MarginContainer/HSplitContainer")
