@@ -34,7 +34,7 @@ func _enter_tree():
 	Global.unsaved_changes = false
 	
 	#Check our config
-	var config = Serialisation.load_config()
+	var config = Save.load_config()
 	if config["version"] != Global.VERSION:
 		Global.debug_log("Config is version {} but project is version {}", [config["version"], Global.VERSION])
 	
@@ -43,7 +43,7 @@ func _enter_tree():
 		config["recent"].erase(Global.project_data["save_path"])
 	config["recent"].push_front(Global.project_data["save_path"])
 	
-	Serialisation.save_config(config)
+	Save.save_config(config)
 
 func _process(_delta):
 	handle_notifications()
@@ -124,7 +124,7 @@ func menu_select(index):
 				menu_select(MenuIndex.ExportAs)
 			else:
 				var serialised_data = serialise(Global.project_data["conversations"].duplicate(true))
-				var saved = Serialisation.save_to_json(serialised_data, Global.project_data["export_path"])
+				var saved = Save.save_to_json(serialised_data, Global.project_data["export_path"])
 				create_notification(
 					("Exported to: " if saved else "Could not export to: ") 
 					+ Global.project_data["export_path"]
@@ -136,7 +136,7 @@ func menu_select(index):
 				FileDialog.FILE_MODE_SAVE_FILE, 
 				Global.FilterType.Json,
 				func(path):
-					if Serialisation.path_is_valid(path):
+					if Save.path_is_valid(path):
 						Global.project_data["export_path"] = path
 						menu_select(MenuIndex.Export)
 			)
@@ -145,8 +145,8 @@ func menu_select(index):
 
 func save_project(path):
 	var saved = false
-	if Serialisation.path_is_valid(path):
-		saved = Serialisation.save_to_json(Global.project_data, path)
+	if Save.path_is_valid(path):
+		saved = Save.save_to_json(Global.project_data, path)
 	
 	if saved:
 		Global.unsaved_changes = false

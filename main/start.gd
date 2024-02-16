@@ -17,7 +17,7 @@ func _enter_tree():
 
 func display_recent_files():
 	var recent_files = $Right/Right/VBoxContainer/ScrollContainer/VBoxContainer
-	var config = Serialisation.load_config()
+	var config = Save.load_config()
 	#We may delete entries so we iterate over a copy
 	var entries = config["recent"].duplicate()
 
@@ -35,7 +35,7 @@ func display_recent_files():
 			config["recent"].erase(file_name)
 	
 	#Save the config - we may have deleted some recent files
-	Serialisation.save_config(config)
+	Save.save_config(config)
 
 func new_project():
 	Global.create_file_dialogue(
@@ -44,9 +44,9 @@ func new_project():
 		Global.FilterType.Lint,
 		func(save_path):
 			Global.project_data = Global.blank_project()
-			if Serialisation.path_is_valid(save_path):
+			if Save.path_is_valid(save_path):
 				Global.project_data["save_path"] = save_path
-				Serialisation.save_to_json(Global.project_data.duplicate(true), save_path)
+				Save.save_to_json(Global.project_data.duplicate(true), save_path)
 				get_tree().change_scene_to_file("res://main.tscn")
 	)
 
@@ -60,8 +60,8 @@ func open_project():
 	)
 
 func load_project(save_path):
-	if Serialisation.path_is_valid(save_path):
-		var data = Serialisation.load_from_json(save_path)
+	if Save.path_is_valid(save_path):
+		var data = Save.load_from_json(save_path)
 		if data.is_none():
 			Global.debug_log("File at path '{}' is invalid and could not be loaded.", [save_path])
 		else:

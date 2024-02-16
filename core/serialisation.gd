@@ -1,4 +1,4 @@
-class_name Serialisation
+class_name Save
 
 const CONFIG_PATH = "config.json"
 

@@ -171,7 +171,6 @@ func declare_defaults():
 				"speaker": LintObject.Type.Choice(speakers),
 				"go_to_line": LintObject.Type.Line(),
 				"show_condition": LintObject.Type.Condition(),
-				"signals": LintObject.Type.Signals(items, quests, skills, sounds),
 			}))
 		})
 	)
