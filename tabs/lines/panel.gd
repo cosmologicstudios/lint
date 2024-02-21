@@ -36,8 +36,13 @@ func clear_conversation_widgets():
 		graph_edit.free()
 	graph_edit = GraphEdit.new()
 	graph_edit.connect("popup_request", panel_right_clicked)
+	graph_edit.connect("connection_request", connection_request)
+	graph_edit.right_disconnects = true
 	
 	panel_node.add_child(graph_edit)
+
+func connection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int):
+	graph_edit.connect_node(from_node, from_port, to_node, to_port)
 
 #Sets the conversation with the given name
 func set_conversation(conversation_name):
@@ -92,14 +97,13 @@ func create_line_node(pos, type, line, id, str_identifier, size):
 	
 	graph_node.set_draggable(true)
 	graph_node.set_resizable(true)
-	graph_node.set_show_close_button(true)
 	
 	graph_node.connect("resize_request", (
-		func(min_size, graph_node): 
+		func(min_size, graph_node, id): 
 			graph_node.set_size(min_size)
 			Global.project_data["lines"][id]["width"] = min_size.x
 			Global.project_data["lines"][id]["height"] = min_size.y
-	).bind(graph_node))
+	).bind(graph_node, id))
 	graph_node.connect("close_request", Global.create_popup.bind(
 		["Delete", "Cancel"],
 		[delete_node.bind(graph_node, id)],
@@ -125,6 +129,14 @@ func create_line_node(pos, type, line, id, str_identifier, size):
 		graph_node.set_size(size)
 	
 	graph_node.set_title(str_identifier + " | " + type + " | id: " + id)
+	
+	match type:
+		"default":
+			graph_node.set_slot(0, true, 0, Color.AZURE, true, 0, Color.AZURE)
+		"choice":
+			graph_node.set_slot(0, true, 0, Color.AZURE, false, 0, Color.AZURE)
+		_:
+			print("Unknown type: " + type)
 	
 	var type_data = values.get_line_types()[type]
 	LintWidget.recurse_create_widgets(graph_node, line["data"], type_data, "", lines, conversation)

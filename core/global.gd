@@ -1,7 +1,6 @@
 extends Node
 
 const VERSION = "1.1.0"
-const LOG_PATH = "log.json"
 
 enum FilterType {
 	Lint,
@@ -84,4 +83,4 @@ func debug_log(msg: String, args: Array = []):
 	msg = str(Time.get_ticks_msec()) + ": " + msg.format(args, "{}")
 	print(msg)
 	debug_list.push_back(msg)
-	Save.save_to_json(debug_list, LOG_PATH)
+	Save.save_to_json(debug_list, "user://log.json")

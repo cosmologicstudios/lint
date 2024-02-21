@@ -4,7 +4,7 @@ const NOTIF_COUNTDOWN_MAX = 360
 
 var lint_panel
 var lint_tree
-var notification
+var notification_node
 var notif_countdown
 
 enum MenuIndex {
@@ -19,12 +19,12 @@ func _enter_tree():
 	randomize()
 	
 	notif_countdown = 0
-	notification = get_node("Notification")
+	notification_node = get_node("Notification")
 	
 	setup_menu_bar()
 	
 	var values = LintObject.new()
-	var container = get_node("ColorRect/MarginContainer/TabContainer/Project")
+	var container = get_node("ColorRect/MarginContainer/TabContainer/Lines")
 	var tree_node = container.get_node("Side")
 	var panel_node = container.get_node("Main")
 	
@@ -49,26 +49,26 @@ func _process(_delta):
 	handle_notifications()
 
 func handle_notifications():
-	if notification.visible:
+	if notification_node.visible:
 		notif_countdown -= 1
 		if notif_countdown < 0:
-			var notif_mod = notification.get_modulate()
+			var notif_mod = notification_node.get_modulate()
 			notif_mod[3] -= 0.02
-			notification.set_modulate(notif_mod)
+			notification_node.set_modulate(notif_mod)
 			
 			if notif_mod[3] <= 0:
-				notification.visible = false
+				notification_node.visible = false
 	
 func create_notification(string, args=null):
 	if args != null:
 		string = string.format(args, "{}")
 	
-	notification.set_modulate(Color(1.0, 1.0, 1.0, 1.0))
-	var button = notification.get_node("Button")
+	notification_node.set_modulate(Color(1.0, 1.0, 1.0, 1.0))
+	var button = notification_node.get_node("Button")
 	button.connect("pressed", func(): notif_countdown = 0)
 	notif_countdown = NOTIF_COUNTDOWN_MAX
-	if not notification.visible:
-		notification.visible = true
+	if not notification_node.visible:
+		notification_node.visible = true
 		button.text = string
 	else:
 		button.text += "\n" + string

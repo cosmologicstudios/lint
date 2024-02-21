@@ -2,30 +2,30 @@ class_name LintWidget
 
 const BOX = "__box"
 
-static func create_margin(node):
+static func create_margin(_node):
 	var margin = MarginContainer.new()
 	margin.set_h_size_flags(Control.SIZE_EXPAND_FILL)
 	#margin.set_v_size_flags(Control.SIZE_EXPAND_FILL)
-	node.add_child(margin)
+	_node.add_child(margin)
 	return margin
 
-static func create_v_marginbox(node):
-	var margin = create_margin(node)
+static func create_v_marginbox(_node):
+	var margin = create_margin(_node)
 	var box = VBoxContainer.new()
 	box.set_h_size_flags(Control.SIZE_EXPAND_FILL)
 	margin.add_child(box)
 	return box
 
-static func create_h_marginbox(node):
-	var margin = create_margin(node)
+static func create_h_marginbox(_node):
+	var margin = create_margin(_node)
 	var box = HBoxContainer.new()
 	box.set_h_size_flags(Control.SIZE_EXPAND_FILL)
 	margin.add_child(box)
 	return box
 
-static func create_list_entry(node, list, entry_data, type_data, item, lines, conversation):
+static func create_list_entry(_node, _list, _entry_data, _type_data, _item, _lines, _conversation):
 	var panel = PanelContainer.new()
-	node.add_child(panel)
+	_node.add_child(panel)
 	
 	var box = HBoxContainer.new()
 	panel.add_child(box)
@@ -33,39 +33,39 @@ static func create_list_entry(node, list, entry_data, type_data, item, lines, co
 	fields_box.set_h_size_flags(Control.SIZE_EXPAND_FILL)
 	box.add_child(fields_box)
 	
-	recurse_create_widgets(fields_box, entry_data, type_data, item, lines, conversation)
+	recurse_create_widgets(fields_box, _entry_data, _type_data, _item, _lines, _conversation)
 	
 	var delete = Button.new()
 	delete.text = " X "
 	
-	delete.connect("pressed", (func(box, list, entry_data): 
-		list.erase(entry_data)
-		box.queue_free()
+	delete.connect("pressed", (func(_box, _list, _entry_data): 
+		_list.erase(_entry_data)
+		_box.queue_free()
 		Global.debug_log("Deleted entry from widget")
-	).bind(box, list, entry_data))
+	).bind(box, _list, _entry_data))
 	
 	box.add_child(delete)
 
-static func setup_line_items(choices, lines, line_data):
-	var keys = lines.keys()
-	choices.clear()
+static func setup_line_items(_choices, _lines, _line_data):
+	var keys = _lines.keys()
+	_choices.clear()
 	
 	for i in len(keys):
 		var id = keys[i]
-		choices.add_item("Line " + lines[id])
-		choices.set_item_metadata(i, id)
-	choices.add_item("END", -1)
+		_choices.add_item("Line " + _lines[id])
+		_choices.set_item_metadata(i, id)
+	_choices.add_item("END", -1)
 	
 	#Select our old index
 	var selected_idx = -1
-	if line_data[BOX] != null:
-		for idx in choices.item_count-1:
-			var metadata = choices.get_item_metadata(idx)
-			if metadata == line_data[BOX]:
+	if _line_data[BOX] != null:
+		for idx in _choices.item_count-1:
+			var metadata = _choices.get_item_metadata(idx)
+			if metadata == _line_data[BOX]:
 				selected_idx = idx
 				break
-	choices.select(selected_idx)
-	choices.emit_signal("item_selected", selected_idx)
+	_choices.select(selected_idx)
+	_choices.emit_signal("item_selected", selected_idx)
 
 static func recurse_create_widgets(node, line_data, type_data, data_name, lines, conversation):
 	match type_data["type"]:
@@ -97,15 +97,16 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			choices.set_h_size_flags(Control.SIZE_EXPAND_FILL)
 			
 			choices.connect("item_selected", (
-				func(index, line_data, choices): 
+				func(index, _line_data, _choices): 
 					var data = null
 					if index != -1:
-						data = choices.get_item_metadata(index)
-					line_data[BOX] = data
+						data = _choices.get_item_metadata(index)
+					_line_data[BOX] = data
 			).bind(line_data, choices))
 			
 			choices.connect("pressed", (
-				func(choices, lines, line_data): setup_line_items(choices, lines, line_data)
+				func(choices, _lines, _line_data): 
+					setup_line_items(choices, _lines, _line_data)
 			).bind(choices, lines, line_data))
 			
 			node.add_child(label)
@@ -127,11 +128,11 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 				choices.set_item_metadata(i, choice)
 			
 			choices.connect("item_selected", (
-				func(index, line_data, option_button): 
+				func(index, _line_data, _option_button): 
 					var data = null
 					if index != -1:
-						data = option_button.get_item_metadata(index)
-					line_data[BOX] = data
+						data = _option_button.get_item_metadata(index)
+					_line_data[BOX] = data
 			).bind(line_data, choices))
 			
 			box.add_child(label)

@@ -1,6 +1,6 @@
 class_name Save
 
-const CONFIG_PATH = "config.json"
+const CONFIG_PATH = "user://config.json"
 
 # Saves a dictionary to the given full path
 static func save_to_json(data, path) -> bool:

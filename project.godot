@@ -20,6 +20,11 @@ config/icon="res://icon.svg"
 
 Global="*res://core/global.gd"
 
+[debug]
+
+gdscript/warnings/confusable_local_declaration=0
+gdscript/warnings/confusable_local_usage=0
+
 [display]
 
 window/size/viewport_width=1280

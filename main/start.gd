@@ -66,6 +66,6 @@ func load_project(save_path):
 			Global.debug_log("File at path '{}' is invalid and could not be loaded.", [save_path])
 		else:
 			Global.project_data = data.unwrap()
-			get_tree().change_scene_to_file("res://main.tscn")
+			get_tree().change_scene_to_file("res://main/main.tscn")
 	else:
 		Global.debug_log("Open NOT successful. Attempted path: " + save_path)
