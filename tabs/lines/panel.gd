@@ -5,10 +5,7 @@ const NODE_HEIGHT = 1
 
 var values
 var panel_node
-var lines
 
-const identifiers = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
-var identifier
 var graph_edit = null
 var conversation = null
 var current_conversation_name = ""
@@ -16,22 +13,9 @@ var current_conversation_name = ""
 func _init(node, lint_values):
 	panel_node = node
 	values = lint_values
-	lines = {}
 	print("Panel initialised.")
 
-func get_identifier():
-	var letters = len(identifiers)
-	var reps = floor(identifier/letters)
-	var id = identifiers[identifier % letters]
-	for i in reps:
-		id += id
-	
-	identifier += 1
-	return id
-
 func clear_conversation_widgets():
-	lines.clear()
-	
 	if graph_edit != null:
 		graph_edit.free()
 	graph_edit = GraphEdit.new()
@@ -46,8 +30,6 @@ func connection_request(from_node: StringName, from_port: int, to_node: StringNa
 
 #Sets the conversation with the given name
 func set_conversation(conversation_name):
-	identifier = 0
-	
 	clear_conversation_widgets()
 	current_conversation_name = conversation_name
 	if conversation_name not in Global.project_data["conversations"]:
@@ -57,9 +39,6 @@ func set_conversation(conversation_name):
 	
 	var line_names = conversation.keys()
 	var total = len(line_names)
-	var str_identifiers = []
-	for i in total:
-		str_identifiers.append(register_line(line_names[i]))
 	
 	#Create conversation widgets
 	for i in total:
@@ -68,7 +47,7 @@ func set_conversation(conversation_name):
 		var data = Global.project_data["lines"][id]
 		create_line_node(
 			Vector2(data["x"], data["y"]), 
-			line["type"], line, id, str_identifiers[i], 
+			line["type"], line, id, 
 			Vector2(data["width"], data["height"])
 		)
 
@@ -89,7 +68,7 @@ func panel_right_clicked(pos):
 	prompts.append("Cancel")
 	Global.create_popup(prompts, funcs)
 
-func create_line_node(pos, type, line, id, str_identifier, size):
+func create_line_node(pos, type, line, id, size):
 	Global.unsaved_changes = true
 	
 	var graph_node = GraphNode.new()
@@ -104,10 +83,10 @@ func create_line_node(pos, type, line, id, str_identifier, size):
 			Global.project_data["lines"][id]["width"] = min_size.x
 			Global.project_data["lines"][id]["height"] = min_size.y
 	).bind(graph_node, id))
-	graph_node.connect("close_request", Global.create_popup.bind(
-		["Delete", "Cancel"],
-		[delete_node.bind(graph_node, id)],
-	))
+	#graph_node.connect("close_request", Global.create_popup.bind(
+	#	["Delete", "Cancel"],
+	#	[delete_node.bind(graph_node, id)],
+	#))
 	graph_node.connect("mouse_entered", func(): graph_edit.set_selected(graph_node))
 	graph_node.connect("position_offset_changed", (
 		func(graph_node, id): 
@@ -128,25 +107,18 @@ func create_line_node(pos, type, line, id, str_identifier, size):
 	else:
 		graph_node.set_size(size)
 	
-	graph_node.set_title(str_identifier + " | " + type + " | id: " + id)
-	
-	match type:
-		"default":
-			graph_node.set_slot(0, true, 0, Color.AZURE, true, 0, Color.AZURE)
-		"choice":
-			graph_node.set_slot(0, true, 0, Color.AZURE, false, 0, Color.AZURE)
-		_:
-			print("Unknown type: " + type)
+	graph_node.set_title("id: " + id + " | " + type)
+	graph_node.set_slot(0, true, 0, Color.AZURE, false, 0, Color.AZURE)
 	
 	var type_data = values.get_line_types()[type]
-	LintWidget.recurse_create_widgets(graph_node, line["data"], type_data, "", lines, conversation)
+	LintWidget.recurse_create_widgets(graph_node, graph_node, line["data"], type_data, "", conversation)
 	print("Created new " + type + " line with ID: " + id)
 
 #Create a node in the panel
 func add_line_node(pos, type):
 	var id = str(randi())
-	
-	var keys = lines.keys()
+	var keys = Global.project_data["lines"].keys()
+	#If we happen to select an id that already exists, reroll
 	while id in keys:
 		id = str(randi())
 	
@@ -157,13 +129,7 @@ func add_line_node(pos, type):
 	conversation[id] = line
 	Global.project_data["lines"][id] = { "x": pos.x, "y": pos.y }
 	
-	var str_identifier = register_line(id)
-	create_line_node(pos, type, line, id, str_identifier, null)
-
-func register_line(id):
-	var str_identifier = get_identifier()
-	lines[id] = str_identifier
-	return str_identifier
+	create_line_node(pos, type, line, id, null)
 	
 #Deletes a node
 func delete_node(node, id):
@@ -171,6 +137,5 @@ func delete_node(node, id):
 	
 	conversation.erase(id)
 	Global.project_data["lines"].erase(id)
-	lines.erase(id)
 	node.free()
 	print("Deleted line: " + id)

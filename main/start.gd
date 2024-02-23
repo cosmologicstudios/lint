@@ -47,7 +47,7 @@ func new_project():
 			if Save.path_is_valid(save_path):
 				Global.project_data["save_path"] = save_path
 				Save.save_to_json(Global.project_data.duplicate(true), save_path)
-				get_tree().change_scene_to_file("res://main.tscn")
+				get_tree().change_scene_to_file("res://main/main.tscn")
 	)
 
 func open_project():

@@ -5,7 +5,6 @@ const BOX = "__box"
 static func create_margin(_node):
 	var margin = MarginContainer.new()
 	margin.set_h_size_flags(Control.SIZE_EXPAND_FILL)
-	#margin.set_v_size_flags(Control.SIZE_EXPAND_FILL)
 	_node.add_child(margin)
 	return margin
 
@@ -23,7 +22,7 @@ static func create_h_marginbox(_node):
 	margin.add_child(box)
 	return box
 
-static func create_list_entry(_node, _list, _entry_data, _type_data, _item, _lines, _conversation):
+static func create_list_entry(graph_node, _node, _list, _entry_data, _type_data, _item, _conversation):
 	var panel = PanelContainer.new()
 	_node.add_child(panel)
 	
@@ -33,7 +32,7 @@ static func create_list_entry(_node, _list, _entry_data, _type_data, _item, _lin
 	fields_box.set_h_size_flags(Control.SIZE_EXPAND_FILL)
 	box.add_child(fields_box)
 	
-	recurse_create_widgets(fields_box, _entry_data, _type_data, _item, _lines, _conversation)
+	recurse_create_widgets(graph_node, fields_box, _entry_data, _type_data, _item, _conversation)
 	
 	var delete = Button.new()
 	delete.text = " X "
@@ -46,28 +45,7 @@ static func create_list_entry(_node, _list, _entry_data, _type_data, _item, _lin
 	
 	box.add_child(delete)
 
-static func setup_line_items(_choices, _lines, _line_data):
-	var keys = _lines.keys()
-	_choices.clear()
-	
-	for i in len(keys):
-		var id = keys[i]
-		_choices.add_item("Line " + _lines[id])
-		_choices.set_item_metadata(i, id)
-	_choices.add_item("END", -1)
-	
-	#Select our old index
-	var selected_idx = -1
-	if _line_data[BOX] != null:
-		for idx in _choices.item_count-1:
-			var metadata = _choices.get_item_metadata(idx)
-			if metadata == _line_data[BOX]:
-				selected_idx = idx
-				break
-	_choices.select(selected_idx)
-	_choices.emit_signal("item_selected", selected_idx)
-
-static func recurse_create_widgets(node, line_data, type_data, data_name, lines, conversation):
+static func recurse_create_widgets(graph_node, node, line_data, type_data, data_name, conversation):
 	match type_data["type"]:
 		LintObject.TypeId.Value:
 			var box = create_h_marginbox(node)
@@ -93,26 +71,29 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 		LintObject.TypeId.Line:
 			var label = Label.new()
 			label.text = data_name
-			var choices = OptionButton.new()
-			choices.set_h_size_flags(Control.SIZE_EXPAND_FILL)
+			var next_line = TextEdit.new()
+			next_line.editable = false
+			next_line.set_h_size_flags(Control.SIZE_EXPAND_FILL)
+			if line_data[BOX] != null:
+				next_line.text = line_data[BOX]
 			
-			choices.connect("item_selected", (
-				func(index, _line_data, _choices): 
-					var data = null
-					if index != -1:
-						data = _choices.get_item_metadata(index)
-					_line_data[BOX] = data
-			).bind(line_data, choices))
+			var idx = graph_node.get_output_port_count()
+			print(idx)
+			graph_node.set_slot(
+				idx, 
+				graph_node.is_slot_enabled_left(idx), 0, Color.AZURE, 
+				true, 0, Color.AZURE
+			)
+			#Slots will not show unless child Control objs per slot are added
+			var slot_label = Label.new()
+			#slot_label.set_h_size_flags(Control.SIZE_EXPAND_FILL)
+			#slot_label.set_v_size_flags(Control.SIZE_EXPAND_FILL)
+			#slot_label.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
+			#slot_label.text = str(idx)
+			graph_node.add_child(slot_label)
 			
-			choices.connect("pressed", (
-				func(choices, _lines, _line_data): 
-					setup_line_items(choices, _lines, _line_data)
-			).bind(choices, lines, line_data))
-			
-			node.add_child(label)
-			node.add_child(choices)
-			
-			choices.call_deferred("emit_signal", "pressed")
+			#node.add_child(label)
+			#node.add_child(next_line)
 			
 		LintObject.TypeId.Choice:
 			var box = create_h_marginbox(node)
@@ -167,7 +148,7 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			for field_name in type_fields:
 				if field_name not in data:
 					data[field_name] = { BOX: null }
-				recurse_create_widgets(box, data[field_name], fields[field_name], field_name, lines, conversation)
+				recurse_create_widgets(graph_node, box, data[field_name], fields[field_name], field_name, conversation)
 		
 		LintObject.TypeId.Option:
 			var box = create_v_marginbox(node)
@@ -191,7 +172,7 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 							line_data[BOX] = {
 								option_name: { BOX: null }
 							}
-						recurse_create_widgets(field_box, line_data[BOX][option_name], metadata, "", lines, conversation)
+						recurse_create_widgets(graph_node, field_box, line_data[BOX][option_name], metadata, "", conversation)
 			
 			var option_strings = type_data["options"].keys()
 			
@@ -253,14 +234,14 @@ static func recurse_create_widgets(node, line_data, type_data, data_name, lines,
 			var items = create_v_marginbox(panel)
 			var item_type_data = type_data["contains"]
 			
-			var add_list_entry = func(node, line_data, type_data, item, lines, conversation):
-			#static func add_list_entry(node, line_data, type_data, item, lines):
+			var add_list_entry = func(node, line_data, type_data, item, conversation):
+			#static func add_list_entry(node, line_data, type_data, item):
 				var entry_data = { BOX: null }
 				line_data[BOX].append(entry_data)
-				create_list_entry(node, line_data[BOX], entry_data, type_data, item, lines, conversation)
+				create_list_entry(graph_node, node, line_data[BOX], entry_data, type_data, item, conversation)
 			
-			add_button.connect("pressed", add_list_entry.bind(items, line_data, item_type_data, "", lines, conversation))
+			add_button.connect("pressed", add_list_entry.bind(items, line_data, item_type_data, "", conversation))
 			
 			#(node, line_data, type_data, data_name, lines)
 			for entry_data in line_data[BOX]:
-				create_list_entry(items, line_data[BOX], entry_data, item_type_data, "", lines, conversation)
+				create_list_entry(graph_node, items, line_data[BOX], entry_data, item_type_data, "", conversation)

@@ -28,7 +28,6 @@ class Type:
 		return { "type": TypeId.None }
 	static func Value():
 		return { "type": TypeId.Value }
-	
 	static func Line():
 		return { "type": TypeId.Line }
 	
@@ -61,7 +60,8 @@ func declare_defaults():
 	declare_line_type("default", 
 		LintObject.Type.Struct({
 			"text": LintObject.Type.Value(),
-			"speaker": LintObject.Type.Choice(["A", "B"]),
+			"speaker": LintObject.Type.Choice(["Narrator", "Witch", "Townsperson"]),
+			"next_line": LintObject.Type.Line()
 		})
 	)
 	declare_line_type("choice", 
@@ -69,7 +69,7 @@ func declare_defaults():
 			"choices": LintObject.Type.List(
 				LintObject.Type.Struct({
 					"text": LintObject.Type.Value(),
-					"speaker": LintObject.Type.Choice(["A", "B"]),
+					"next_line": LintObject.Type.Line()
 				})
 			)
 		})
